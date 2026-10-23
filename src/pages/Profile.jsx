@@ -4,6 +4,7 @@ import { Avatar } from '../components/Avatar'
 import { ErrorText } from '../components/Composer'
 import { MusicEmbed } from '../components/MusicEmbed'
 import { ReportButton } from '../components/ReportButton'
+import { SocialLinks } from '../components/SocialLinks'
 import { Tags } from '../components/Tags'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -68,6 +69,7 @@ export default function Profile() {
           <Tags items={p.parts} tone="accent" />
           <Tags items={p.genres} />
           {p.bio && <p className="pre">{p.bio}</p>}
+          <SocialLinks profile={p} />
           {p.link && <a href={p.link} target="_blank" rel="noopener noreferrer" className="small">🔗 {p.link}</a>}
         </div>
       </section>

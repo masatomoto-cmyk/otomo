@@ -6,6 +6,7 @@ import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { AREAS, GENRES, PARTS } from '../lib/constants'
 import { isHttpUrl } from '../lib/embed'
+import { normalizeSocial, SOCIALS } from '../lib/social'
 import { useAsync } from '../lib/useAsync'
 import { Avatar } from '../components/Avatar'
 
@@ -19,8 +20,8 @@ export default function Settings() {
 
   useEffect(() => {
     if (profile && !form) {
-      const { display_name, bio, parts, genres, area, link } = profile
-      setForm({ display_name, bio, parts, genres, area, link })
+      const { display_name, bio, parts, genres, area, link, instagram = '', x = '', youtube = '' } = profile
+      setForm({ display_name, bio, parts, genres, area, link, instagram, x, youtube })
     }
   }, [profile, form])
 
@@ -30,9 +31,15 @@ export default function Settings() {
   async function submit(e) {
     e.preventDefault()
     if (form.link && !isHttpUrl(form.link)) return setError(new Error('リンクのURLが正しくありません'))
+    const socials = {}
+    for (const s of SOCIALS) {
+      const url = normalizeSocial(s, form[s.key])
+      if (url === null) return setError(new Error(`${s.label} は @ユーザー名 か ${s.label} のURLで入力してください`))
+      socials[s.key] = url
+    }
     setBusy(true)
     try {
-      await api.updateProfile(user.id, form)
+      await api.updateProfile(user.id, { ...form, ...socials })
       await refreshProfile()
       navigate(`/u/${user.id}`)
     } catch (err) {
@@ -60,7 +67,12 @@ export default function Settings() {
         </select>
       </Field>
       <Field label="自己紹介"><textarea rows={4} maxLength={500} value={form.bio} onChange={set('bio')} placeholder="好きなアーティスト、使っている機材、活動の目標など" /></Field>
-      <Field label="リンク" hint="SNS・SoundCloud・ポートフォリオなど"><input type="url" value={form.link} onChange={set('link')} placeholder="https://" /></Field>
+      {SOCIALS.map((s) => (
+        <Field key={s.key} label={s.label} hint="任意">
+          <input value={form[s.key]} onChange={set(s.key)} placeholder={s.placeholder} autoCapitalize="off" />
+        </Field>
+      ))}
+      <Field label="その他のリンク" hint="SoundCloud・ポートフォリオなど"><input type="url" value={form.link} onChange={set('link')} placeholder="https://" /></Field>
       <ErrorText error={error} />
       <div className="row end">
         <button type="button" className="btn ghost" onClick={() => navigate(-1)}>キャンセル</button>

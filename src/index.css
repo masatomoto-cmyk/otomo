@@ -348,3 +348,21 @@ input[type='checkbox'] { width: auto; accent-color: var(--accent); }
 .btn.danger:hover { background: var(--danger); filter: brightness(1.08); }
 .blocked-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .blocked-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+.social-links { display: flex; gap: 8px; }
+.social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+}
+.social:hover { text-decoration: none; border-color: currentColor; }
+.social svg { width: 18px; height: 18px; }
+.social-instagram:hover { color: #e1306c; }
+.social-youtube:hover { color: #ff0000; }
+.social-x:hover { color: var(--text); }
