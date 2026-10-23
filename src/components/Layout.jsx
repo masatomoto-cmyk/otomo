@@ -1,4 +1,5 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { Avatar } from './Avatar'
@@ -12,8 +13,18 @@ const NAV = [
 ]
 
 export function Layout() {
-  const { user, profile } = useAuth()
+  const { user, profile, unread, refreshUnread } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // ページを移動するたびと、開いている間は1分ごとに未読数を確認する
+  useEffect(() => {
+    refreshUnread()
+  }, [location.pathname, refreshUnread])
+  useEffect(() => {
+    const timer = setInterval(refreshUnread, 60_000)
+    return () => clearInterval(timer)
+  }, [refreshUnread])
 
   async function signOut() {
     await api.auth.signOut()
@@ -40,6 +51,12 @@ export function Layout() {
         <div className="header-user">
           {user ? (
             <>
+              <Link to="/notifications" className="bell" aria-label={unread ? `通知（未読${unread}件）` : '通知'}>
+                <svg viewBox="0 0 24 24" aria-hidden>
+                  <path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5-6.71V4a2 2 0 1 0-4 0v.29A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z" />
+                </svg>
+                {unread > 0 && <span className="badge-count">{unread > 99 ? '99+' : unread}</span>}
+              </Link>
               <Link to={`/u/${user.id}`} title="マイページ">
                 <Avatar profile={profile ?? { id: user.id }} size={34} />
               </Link>

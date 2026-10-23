@@ -54,6 +54,9 @@ export const api = {
   async listProfiles(opts) {
     return (await base.listProfiles(opts)).filter((p) => !blocked.has(p.id))
   },
+  async listNotifications() {
+    return (await base.listNotifications()).filter((n) => !blocked.has(n.actor_id))
+  },
   async getAttendees(eventId) {
     return (await base.getAttendees(eventId)).filter((p) => !blocked.has(p.id))
   },

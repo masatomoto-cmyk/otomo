@@ -5,10 +5,12 @@ import { ErrorText } from '../components/Composer'
 import { MusicEmbed } from '../components/MusicEmbed'
 import { Reactions } from '../components/Reactions'
 import { ReportButton } from '../components/ReportButton'
+import { ShareButtons } from '../components/ShareButtons'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { timeAgo } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
+import { usePageMeta } from '../lib/meta'
 
 export default function TrackDetail() {
   const { id } = useParams()
@@ -16,6 +18,10 @@ export default function TrackDetail() {
   const navigate = useNavigate()
   const track = useAsync(() => api.get('tracks', id), [id])
   const t = track.data
+  usePageMeta({
+    title: t ? `${t.title} / ${t.profile?.display_name ?? ''}` : '作品',
+    description: t ? t.description || `${t.profile?.display_name}さんの作品${t.genre ? `（${t.genre}）` : ''}。感想を届けよう。` : '',
+  })
 
   async function remove() {
     if (!confirm('この作品を削除しますか？')) return
@@ -42,6 +48,10 @@ export default function TrackDetail() {
         {user?.id === t.user_id && <button className="link-btn small push" onClick={remove}>削除</button>}
         <ReportButton type="track" id={t.id} ownerId={t.user_id} className="push" />
       </div>
+      <ShareButtons
+        path={`/tracks/${t.id}`}
+        text={user?.id === t.user_id ? `新しい作品「${t.title}」をOTOMOに投稿しました。感想もらえたら嬉しいです🎧` : `${t.profile?.display_name}さんの「${t.title}」`}
+      />
       <Reactions type="track" id={t.id} ownerId={t.user_id} showReceived />
       <Comments type="track" id={t.id} title="フィードバック" placeholder="良かったところ・気になったところを伝えよう" />
     </article>

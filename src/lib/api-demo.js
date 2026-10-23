@@ -1,6 +1,6 @@
 // Supabase 未設定時に使う、localStorage だけで動くデモ用データ層。
 // api-supabase.js と同じインターフェースを持つ。
-const DB_KEY = 'otomo-demo-db-v3'
+const DB_KEY = 'otomo-demo-db-v4'
 const USER_KEY = 'otomo-demo-user'
 
 const now = Date.now()
@@ -40,6 +40,7 @@ function seed() {
       { id: 'c2', user_id: 'u-mio', target_type: 'recruitment', target_id: 'r1', body: '素敵な企画ですね、応援してます！', created_at: ago(8) },
     ],
     blocks: [],
+    notifications: [],
     reports: [],
     reactions: [
       { user_id: 'u-ken', target_type: 'post', target_id: 'p1', kind: 'relate', owner_id: 'u-mio', created_at: ago(1) },
@@ -86,6 +87,17 @@ export function createDemoApi() {
   const publicProfile = (id) => {
     const p = db.profiles.find((x) => x.id === id)
     return p ? { id: p.id, display_name: p.display_name, avatar_url: p.avatar_url ?? '' } : null
+  }
+  const TABLE_OF = { post: 'posts', track: 'tracks', recruitment: 'recruitments', event: 'events' }
+  const ownerOf = (type, id) => db[TABLE_OF[type]]?.find((r) => r.id === id)?.user_id
+  // 本番では DB のトリガーがやっている通知作成を、デモではここで真似する
+  const notify = (recipient, actor, type, targetType, targetId, kind, excerpt) => {
+    if (!recipient || recipient === actor) return
+    db.notifications.push({
+      id: crypto.randomUUID(), user_id: recipient, actor_id: actor, type, target_type: targetType, target_id: targetId,
+      kind, excerpt: excerpt.slice(0, 120), created_at: new Date().toISOString(), read_at: null,
+    })
+    commit()
   }
   const withProfile = (row) => row && { ...row, profile: publicProfile(row.user_id) }
   const requireUser = () => {
@@ -147,6 +159,25 @@ export function createDemoApi() {
       commit()
       return this.getProfile(id)
     },
+    async listNotifications() {
+      const me = requireUser()
+      return delay(
+        db.notifications
+          .filter((n) => n.user_id === me)
+          .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+          .slice(0, 50)
+          .map((n) => ({ ...n, actor: publicProfile(n.actor_id) })),
+      )
+    },
+    async unreadCount() {
+      const me = getUserId()
+      return delay(me ? db.notifications.filter((n) => n.user_id === me && !n.read_at).length : 0)
+    },
+    async markAllRead() {
+      const me = requireUser()
+      for (const n of db.notifications) if (n.user_id === me && !n.read_at) n.read_at = new Date().toISOString()
+      commit()
+    },
     // デモではデータ URL として localStorage に入れる（256px の webp なので数十KB）
     async uploadAvatar(blob) {
       requireUser()
@@ -206,7 +237,9 @@ export function createDemoApi() {
       return this.list('comments', { eq: { target_type: targetType, target_id: targetId }, ascending: true, limit: 500 })
     },
     async addComment(targetType, targetId, body) {
-      return this.create('comments', { target_type: targetType, target_id: targetId, body })
+      const c = await this.create('comments', { target_type: targetType, target_id: targetId, body })
+      notify(ownerOf(targetType, targetId), c.user_id, targetType === 'recruitment' ? 'apply' : 'comment', targetType, targetId, '', body)
+      return c
     },
 
     async getMyReactions(targetType, targetId) {
@@ -224,7 +257,10 @@ export function createDemoApi() {
         (r) => r.user_id === me && r.target_type === targetType && r.target_id === targetId && r.kind === kind,
       )
       if (idx >= 0) db.reactions.splice(idx, 1)
-      else db.reactions.push({ user_id: me, target_type: targetType, target_id: targetId, kind, owner_id: owner, created_at: new Date().toISOString() })
+      else {
+        db.reactions.push({ user_id: me, target_type: targetType, target_id: targetId, kind, owner_id: owner, created_at: new Date().toISOString() })
+        notify(owner, me, 'reaction', targetType, targetId, kind, '')
+      }
       commit()
       return this.getMyReactions(targetType, targetId)
     },
@@ -285,7 +321,10 @@ export function createDemoApi() {
       const me = requireUser()
       const idx = db.event_attendees.findIndex((a) => a.event_id === eventId && a.user_id === me)
       if (idx >= 0) db.event_attendees.splice(idx, 1)
-      else db.event_attendees.push({ event_id: eventId, user_id: me, created_at: new Date().toISOString() })
+      else {
+        db.event_attendees.push({ event_id: eventId, user_id: me, created_at: new Date().toISOString() })
+        notify(ownerOf('event', eventId), me, 'attend', 'event', eventId, '', '')
+      }
       commit()
       return this.getAttendees(eventId)
     },

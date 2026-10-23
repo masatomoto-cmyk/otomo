@@ -8,8 +8,13 @@ import { AREAS } from '../lib/constants'
 import { isHttpUrl } from '../lib/embed'
 import { formatDateTime, localInputToIso } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
+import { usePageMeta } from '../lib/meta'
 
 export default function Events() {
+  usePageMeta({
+    title: 'ライブ・イベント告知 — ライブハウス・セッション・オープンマイク',
+    description: 'インディーズバンドのライブ、セッション、オープンマイク、オンライン作曲会の予定を探して参加表明できる。自分のライブも無料で告知できます。',
+  })
   const [area, setArea] = useState('')
   const [tab, setTab] = useState('otomo')
   // 開いた時点を基準に「これから」のイベントを出す

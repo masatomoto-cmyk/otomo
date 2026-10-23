@@ -5,6 +5,7 @@ import { ErrorText } from '../components/Composer'
 import { MusicEmbed } from '../components/MusicEmbed'
 import { ReportButton } from '../components/ReportButton'
 import { SocialLinks } from '../components/SocialLinks'
+import { ShareButtons } from '../components/ShareButtons'
 import { Tags } from '../components/Tags'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -12,6 +13,7 @@ import { timeAgo } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
 import { EventCard } from './Events'
 import { PostCard } from './Timeline'
+import { usePageMeta } from '../lib/meta'
 
 const TABS = [
   { key: 'tracks', label: '作品' },
@@ -31,6 +33,10 @@ export default function Profile() {
   const profile = useAsync(() => api.getProfile(id), [id])
   const items = useAsync(() => api.list(tab, { eq: { user_id: id } }), [tab, id])
   const p = profile.data
+  usePageMeta({
+    title: p ? `${p.display_name}さん${p.parts?.length ? `（${p.parts.join('・')}）` : ''}` : 'プロフィール',
+    description: p ? [p.area, p.genres?.join('・'), p.bio].filter(Boolean).join(' / ') || `${p.display_name}さんのOTOMOプロフィール` : '',
+  })
 
   async function toggleBlock() {
     if (!user) return navigate('/login')
@@ -70,6 +76,7 @@ export default function Profile() {
           <Tags items={p.genres} />
           {p.bio && <p className="pre">{p.bio}</p>}
           <SocialLinks profile={p} />
+          {user?.id === id && <ShareButtons path={`/u/${id}`} text={`${p.display_name}のOTOMOプロフィール。作品やライブ予定はこちら🎵`} />}
           {p.link && <a href={p.link} target="_blank" rel="noopener noreferrer" className="small">🔗 {p.link}</a>}
         </div>
       </section>

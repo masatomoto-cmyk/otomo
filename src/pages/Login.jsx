@@ -3,8 +3,10 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { ErrorText, Field } from '../components/Composer'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { usePageMeta } from '../lib/meta'
 
 export default function Login() {
+  usePageMeta({ title: 'ログイン・新規登録', noindex: true })
   const { user } = useAuth()
   const navigate = useNavigate()
   const [mode, setMode] = useState('signin')

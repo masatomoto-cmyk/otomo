@@ -8,8 +8,13 @@ import { GENRES } from '../lib/constants'
 import { isHttpUrl } from '../lib/embed'
 import { timeAgo } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
+import { usePageMeta } from '../lib/meta'
 
 export default function Tracks() {
+  usePageMeta({
+    title: '作品シェア — 自作曲・演奏動画に感想が届く',
+    description: 'DTM・宅録・弾き語り・バンドの自作曲や演奏動画を投稿して、感想やアドバイスをもらえる。いいね数ではなく、ちゃんと言葉が届く音楽コミュニティ。',
+  })
   const [genre, setGenre] = useState('')
   const [waitingOnly, setWaitingOnly] = useState(false)
   const tracks = useAsync(() => api.list('tracks', { eq: genre ? { genre } : {} }), [genre])

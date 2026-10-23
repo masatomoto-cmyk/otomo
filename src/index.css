@@ -371,3 +371,31 @@ input[type='checkbox'] { width: auto; accent-color: var(--accent); }
 .avatar-edit { display: flex; align-items: center; gap: 16px; }
 .avatar-edit label.btn { cursor: pointer; }
 .btn.disabled { opacity: 0.5; pointer-events: none; }
+
+.share { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.share a.chip-btn:hover { text-decoration: none; }
+
+.bell { position: relative; display: inline-flex; color: var(--muted); padding: 4px; border-radius: var(--radius); }
+.bell:hover { color: var(--text); background: var(--surface-2); }
+.bell svg { width: 22px; height: 22px; }
+.badge-count {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+.notifications { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: var(--radius); }
+.notifications li + li { border-top: 1px solid var(--border); }
+.notifications li.unread { background: var(--accent-soft); }
+.notification { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; color: var(--text); }
+.notification:hover { text-decoration: none; background: var(--surface-2); }
+.notification .excerpt { display: block; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }

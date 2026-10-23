@@ -6,8 +6,13 @@ import { Tags } from '../components/Tags'
 import { api } from '../lib/api'
 import { AREAS, PARTS } from '../lib/constants'
 import { useAsync } from '../lib/useAsync'
+import { usePageMeta } from '../lib/meta'
 
 export default function People() {
+  usePageMeta({
+    title: 'ミュージシャンを探す — パート・地域別',
+    description: 'パートや活動地域から、バンド仲間やコラボ相手になれるミュージシャンを探せる。',
+  })
   const [part, setPart] = useState('')
   const [area, setArea] = useState('')
   const people = useAsync(() => api.listProfiles({ part, area }), [part, area])

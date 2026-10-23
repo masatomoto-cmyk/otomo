@@ -4,6 +4,7 @@ import { useAuth } from './lib/auth'
 import EventDetail from './pages/EventDetail'
 import Events from './pages/Events'
 import Login from './pages/Login'
+import Notifications from './pages/Notifications'
 import People from './pages/People'
 import Profile from './pages/Profile'
 import RecruitDetail from './pages/RecruitDetail'
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="people" element={<People />} />
         <Route path="u/:id" element={<Profile />} />
         <Route path="settings" element={<RequireAuth><Settings /></RequireAuth>} />
+        <Route path="notifications" element={<RequireAuth><Notifications /></RequireAuth>} />
         <Route path="login" element={<Login />} />
         <Route path="*" element={<p className="empty">ページが見つかりません</p>} />
       </Route>

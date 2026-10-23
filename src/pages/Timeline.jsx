@@ -11,8 +11,10 @@ import { useAuth } from '../lib/auth'
 import { isHttpUrl } from '../lib/embed'
 import { timeAgo } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
+import { usePageMeta } from '../lib/meta'
 
 export default function Timeline() {
+  usePageMeta({})
   const posts = useAsync(() => api.list('posts'), [])
 
   return (

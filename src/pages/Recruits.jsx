@@ -7,8 +7,13 @@ import { api } from '../lib/api'
 import { AREAS, GENRES, PARTS } from '../lib/constants'
 import { timeAgo } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
+import { usePageMeta } from '../lib/meta'
 
 export default function Recruits() {
+  usePageMeta({
+    title: 'バンドメンバー募集 — パート・地域から探せる',
+    description: 'ボーカル・ギター・ベース・ドラム・キーボード・DTMなど、パートと地域でバンドメンバーやセッション仲間、コラボ相手を探せる。無料で募集を出せます。',
+  })
   const [part, setPart] = useState('')
   const [area, setArea] = useState('')
   const [openOnly, setOpenOnly] = useState(true)

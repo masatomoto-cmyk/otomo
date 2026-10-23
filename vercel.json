@@ -1,4 +1,18 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    {
+      "source": "/:kind(tracks|recruits|events|u)/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(twitterbot|facebookexternalhit|line-poker|discordbot|slackbot|slack-imgproxy|telegrambot|whatsapp|skypeuripreview|linkedinbot|embedly|pinterest|misskey|mastodon|bluesky|cardyb|hatena).*"
+        }
+      ],
+      "destination": "/api/share?kind=:kind&id=:id"
+    },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
 }

@@ -10,8 +10,10 @@ import { normalizeSocial, SOCIALS } from '../lib/social'
 import { useAsync } from '../lib/useAsync'
 import { Avatar } from '../components/Avatar'
 import { toSquareWebp } from '../lib/image'
+import { usePageMeta } from '../lib/meta'
 
 export default function Settings() {
+  usePageMeta({ title: 'プロフィール編集', noindex: true })
   const { user, profile, refreshProfile } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState(null)
@@ -23,8 +25,8 @@ export default function Settings() {
 
   useEffect(() => {
     if (profile && !form) {
-      const { display_name, bio, parts, genres, area, link, instagram = '', x = '', youtube = '' } = profile
-      setForm({ display_name, bio, parts, genres, area, link, instagram, x, youtube })
+      const { display_name, bio, parts, genres, area, link, instagram = '', x = '', youtube = '', email_notifications = true } = profile
+      setForm({ display_name, bio, parts, genres, area, link, instagram, x, youtube, email_notifications })
     }
   }, [profile, form])
 
@@ -121,6 +123,14 @@ export default function Settings() {
           <input value={form[s.key]} onChange={set(s.key)} placeholder={s.placeholder} autoCapitalize="off" />
         </Field>
       ))}
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={form.email_notifications}
+          onChange={(e) => setForm((f) => ({ ...f, email_notifications: e.target.checked }))}
+        />{' '}
+        コメント・応募・リアクションをメールでも受け取る（15分ごとにまとめて届きます）
+      </label>
       <Field label="その他のリンク" hint="SoundCloud・ポートフォリオなど"><input type="url" value={form.link} onChange={set('link')} placeholder="https://" /></Field>
       <ErrorText error={error} />
       <div className="row end">

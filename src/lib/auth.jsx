@@ -23,7 +23,19 @@ export function AuthProvider({ children }) {
     if (user) setProfile(await api.getProfile(user.id))
   }, [user])
 
-  return <AuthContext.Provider value={{ user, profile, loading, refreshProfile }}>{children}</AuthContext.Provider>
+  // ヘッダーのベルに出す未読数
+  const [unread, setUnread] = useState(0)
+  const refreshUnread = useCallback(async () => {
+    try {
+      setUnread(user ? await api.unreadCount() : 0)
+    } catch {
+      // 通信できないときは前の数字のまま
+    }
+  }, [user])
+
+  return (
+    <AuthContext.Provider value={{ user, profile, loading, refreshProfile, unread, refreshUnread }}>{children}</AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

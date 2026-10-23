@@ -4,11 +4,13 @@ import { Comments } from '../components/Comments'
 import { ErrorText } from '../components/Composer'
 import { Reactions } from '../components/Reactions'
 import { ReportButton } from '../components/ReportButton'
+import { ShareButtons } from '../components/ShareButtons'
 import { Tags } from '../components/Tags'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { timeAgo } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
+import { usePageMeta } from '../lib/meta'
 
 export default function RecruitDetail() {
   const { id } = useParams()
@@ -17,6 +19,10 @@ export default function RecruitDetail() {
   const recruit = useAsync(() => api.get('recruitments', id), [id])
   const r = recruit.data
   const mine = user?.id === r?.user_id
+  usePageMeta({
+    title: r ? `${r.is_open ? '' : '【募集終了】'}${r.title}（${[r.parts.join('・'), r.area].filter(Boolean).join(' / ')}）` : 'メンバー募集',
+    description: r ? `${r.parts.length ? `募集パート: ${r.parts.join('・')}。` : ''}${r.area ? `地域: ${r.area}。` : ''}${r.body}` : '',
+  })
 
   async function toggleOpen() {
     recruit.setData(await api.update('recruitments', id, { is_open: !r.is_open }))
@@ -54,6 +60,13 @@ export default function RecruitDetail() {
         )}
         <ReportButton type="recruitment" id={r.id} ownerId={r.user_id} className="push" />
       </div>
+      {r.is_open && (
+        <ShareButtons
+          path={`/recruits/${r.id}`}
+          text={`【メンバー募集】${r.title}${r.parts.length ? `（${r.parts.join('・')}）` : ''}`}
+          hashtags={['OTOMO', 'バンドメンバー募集']}
+        />
+      )}
       <Reactions type="recruitment" id={r.id} ownerId={r.user_id} showReceived />
       <Comments
         type="recruitment"

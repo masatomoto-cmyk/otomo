@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /settings
+Disallow: /notifications
+Disallow: /login
+Disallow: /api/
+
+Sitemap: https://otomo-alpha.vercel.app/sitemap.xml

@@ -152,6 +152,26 @@ export function createSupabaseApi(url, key) {
       return Object.fromEntries(rows.map((r) => [r.target_id, r.count]))
     },
 
+    // 通知（コメント・応募・リアクション・参加表明。DB のトリガーで作られる）
+    async listNotifications() {
+      return unwrap(
+        await sb
+          .from('notifications')
+          .select('*, actor:profiles!notifications_actor_id_fkey(id, display_name, avatar_url)')
+          .order('created_at', { ascending: false })
+          .limit(50),
+      )
+    },
+    async unreadCount() {
+      if (!(await currentUserId())) return 0
+      const { count, error } = await sb.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null)
+      if (error) throw new Error(error.message)
+      return count ?? 0
+    },
+    async markAllRead() {
+      unwrap(await sb.from('notifications').update({ read_at: new Date().toISOString() }).is('read_at', null))
+    },
+
     // ブロック
     async listMyBlocks() {
       const me = await currentUserId()
