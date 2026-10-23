@@ -41,3 +41,7 @@ export const AREA_PLACES = {
   四国: '高松・松山・高知・徳島', '九州・沖縄': '福岡・熊本・鹿児島・那覇', オンライン: '宅録・リモートセッション・ネット上のコラボ',
 }
 export const fromSlug = (map, slug) => Object.keys(map).find((k) => map[k] === slug) ?? ''
+export const GENRE_SLUGS = {
+  ロック: 'rock', ポップス: 'pops', ジャズ: 'jazz', ヒップホップ: 'hiphop', 'R&B': 'rnb', エレクトロ: 'electronic',
+  メタル: 'metal', パンク: 'punk', 'アニソン・ボカロ': 'anison-vocaloid', クラシック: 'classical', アコースティック: 'acoustic', その他: 'other',
+}

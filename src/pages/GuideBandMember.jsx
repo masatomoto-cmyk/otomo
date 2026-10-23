@@ -47,7 +47,7 @@ export default function GuideBandMember() {
   return (
     <article className="card guide">
       <nav className="crumbs small" aria-label="パンくずリスト">
-        <Link to="/recruits">バンドメンバー募集</Link> › <span>募集の始め方</span>
+        <Link to="/guide">音楽活動ガイド</Link> › <span>バンドメンバー募集の始め方</span>
       </nav>
       <h1>バンドメンバー募集の始め方 — 募集文の書き方とテンプレート</h1>
       <p className="muted small">更新日: {PUBLISHED}</p>

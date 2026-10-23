@@ -1,33 +1,46 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { UserChip } from '../components/Avatar'
 import { Composer, ErrorText, Field } from '../components/Composer'
 import { MusicEmbed } from '../components/MusicEmbed'
 import { api } from '../lib/api'
-import { GENRES } from '../lib/constants'
+import { fromSlug, GENRE_SLUGS, GENRES } from '../lib/constants'
 import { isHttpUrl } from '../lib/embed'
 import { timeAgo } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
 import { usePageMeta } from '../lib/meta'
 
 export default function Tracks() {
-  usePageMeta({
-    title: '作品シェア — 自作曲・演奏動画に感想が届く',
-    description: 'DTM・宅録・弾き語り・バンドの自作曲や演奏動画を投稿して、感想やアドバイスをもらえる。いいね数ではなく、ちゃんと言葉が届く音楽コミュニティ。',
-  })
-  const [genre, setGenre] = useState('')
+  // ジャンルの絞り込みは URL（/tracks/genre/rock）で表し、ジャンルごとのページとして検索に載せる
+  const navigate = useNavigate()
+  const genre = fromSlug(GENRE_SLUGS, useParams().genreSlug)
+  const setGenre = (g) => navigate(g ? `/tracks/genre/${GENRE_SLUGS[g]}` : '/tracks')
   const [waitingOnly, setWaitingOnly] = useState(false)
   const tracks = useAsync(() => api.list('tracks', { eq: genre ? { genre } : {} }), [genre])
   // 人気順は作らない。代わりにまだ誰からも感想をもらっていない作品を見つけやすくする
   const counts = useAsync(() => api.commentCounts('track'), [])
   const isWaiting = (t) => counts.data && !counts.data[t.id]
   const shown = tracks.data?.filter((t) => !waitingOnly || isWaiting(t))
+  const h1 = genre ? `${genre}の自作曲・演奏動画` : '作品シェア'
+  const lead = genre
+    ? `${genre}の自作曲・カバー・演奏動画が集まっています。聴いた感想を一言届けてみませんか。自分の${genre}作品を投稿して感想をもらうこともできます。`
+    : 'DTM・宅録・弾き語り・バンドの自作曲や演奏動画を投稿して、感想やアドバイスをもらえます。いいね数ではなく、ちゃんと言葉が届く場所です。'
+  usePageMeta({
+    title: genre ? `${h1} — 感想・フィードバックが届く` : '作品シェア — 自作曲・演奏動画に感想が届く',
+    description: lead,
+    noindex: genre && tracks.data?.length === 0,
+  })
 
   return (
     <div className="stack">
       <div className="page-head">
-        <h1>作品シェア</h1>
-        <p className="muted">自作曲・カバー・演奏動画を投稿して、感想やアドバイスをもらおう</p>
+        {genre && (
+          <nav className="crumbs small" aria-label="パンくずリスト">
+            <Link to="/tracks">作品シェア</Link> › <span>{h1}</span>
+          </nav>
+        )}
+        <h1>{h1}</h1>
+        <p className="muted">{lead}</p>
       </div>
       <Composer label="作品を投稿する">
         {(close) => <TrackForm onDone={(t) => { tracks.setData([t, ...(tracks.data ?? [])]); counts.reload(); close() }} onCancel={close} />}
@@ -57,6 +70,17 @@ export default function Tracks() {
         </article>
       ))}
       {shown?.length === 0 && <p className="empty">{waitingOnly ? '感想待ちの作品はありません' : 'まだ作品がありません'}</p>}
+      <section className="card browse">
+        <h2>ジャンルから作品を探す</h2>
+        <div className="tags">
+          {GENRES.filter((g) => g !== 'その他').map((g) => (
+            <Link key={g} className="tag" to={`/tracks/genre/${GENRE_SLUGS[g]}`}>{g}</Link>
+          ))}
+        </div>
+        <p className="small">
+          <Link to="/guide/feedback">自作曲の感想をもらう方法（DTM・宅録・弾き語り）</Link>
+        </p>
+      </section>
     </div>
   )
 }

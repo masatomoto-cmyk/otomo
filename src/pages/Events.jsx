@@ -1,21 +1,20 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { UserChip } from '../components/Avatar'
 import { Composer, ErrorText, Field } from '../components/Composer'
 import { ExternalEvents } from '../components/ExternalEvents'
 import { api } from '../lib/api'
-import { AREAS } from '../lib/constants'
+import { AREA_PLACES, AREA_SLUGS, AREAS, fromSlug } from '../lib/constants'
 import { isHttpUrl } from '../lib/embed'
 import { formatDateTime, localInputToIso } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
 import { usePageMeta } from '../lib/meta'
 
 export default function Events() {
-  usePageMeta({
-    title: 'ライブ・イベント告知 — ライブハウス・セッション・オープンマイク',
-    description: 'インディーズバンドのライブ、セッション、オープンマイク、オンライン作曲会の予定を探して参加表明できる。自分のライブも無料で告知できます。',
-  })
-  const [area, setArea] = useState('')
+  // 地域の絞り込みは URL（/events/area/kanto）で表し、検索エンジンが地域ごとのページとして扱えるようにする
+  const navigate = useNavigate()
+  const area = fromSlug(AREA_SLUGS, useParams().areaSlug)
+  const setArea = (a) => navigate(a ? `/events/area/${AREA_SLUGS[a]}` : '/events')
   const [tab, setTab] = useState('otomo')
   // 開いた時点を基準に「これから」のイベントを出す
   const since = useMemo(() => new Date(Date.now() - 3 * 3600_000).toISOString(), [])
@@ -23,12 +22,28 @@ export default function Events() {
     () => api.list('events', { eq: area ? { area } : {}, gte: { starts_at: since }, order: 'starts_at', ascending: true }),
     [area, since],
   )
+  const h1 = area ? `${area}のライブ・イベント情報` : 'ライブ・イベント告知'
+  const lead = area
+    ? area === 'オンライン'
+      ? 'オンラインで参加できる作曲会・配信ライブ・リモートセッションの予定です。'
+      : `${AREA_PLACES[area]}などで開かれるインディーズのライブ、セッション、オープンマイクの予定です。参加表明やコメントで気軽に交流できます。`
+    : 'インディーズバンドのライブ、セッション、オープンマイク、オンライン作曲会の予定を探して参加表明できます。自分のライブも無料で告知できます。'
+  usePageMeta({
+    title: area ? `${h1}（ライブハウス・セッション・オープンマイク）` : 'ライブ・イベント告知 — ライブハウス・セッション・オープンマイク',
+    description: lead,
+    noindex: area && events.data?.length === 0,
+  })
 
   return (
     <div className="stack">
       <div className="page-head">
-        <h1>ライブ・イベント</h1>
-        <p className="muted">ライブ、セッション、オープンマイク、オンライン作業会の告知</p>
+        {area && (
+          <nav className="crumbs small" aria-label="パンくずリスト">
+            <Link to="/events">ライブ・イベント</Link> › <span>{h1}</span>
+          </nav>
+        )}
+        <h1>{h1}</h1>
+        <p className="muted">{lead}</p>
       </div>
       <div className="tabs" role="tablist">
         <button role="tab" aria-selected={tab === 'otomo'} className={tab === 'otomo' ? 'on' : ''} onClick={() => setTab('otomo')}>
@@ -63,9 +78,27 @@ export default function Events() {
         <>
           <ErrorText error={events.error} />
           {events.data?.map((ev) => <EventCard key={ev.id} ev={ev} />)}
-          {events.data?.length === 0 && <p className="empty">予定されているイベントはありません</p>}
+          {events.data?.length === 0 && (
+            <div className="empty">
+              <p>予定されているイベントはまだありません。</p>
+              <p className="small">
+                自分のライブやセッションを告知してみませんか？ 出演の流れは <Link to="/guide/first-live">初ライブまでの流れ</Link> で紹介しています。
+              </p>
+            </div>
+          )}
         </>
       )}
+      <section className="card browse">
+        <h2>地域からイベントを探す</h2>
+        <div className="tags">
+          {AREAS.map((a) => (
+            <Link key={a} className="tag" to={`/events/area/${AREA_SLUGS[a]}`}>{a}</Link>
+          ))}
+        </div>
+        <p className="small">
+          <Link to="/guide/first-live">ライブハウスに初出演するには</Link>・<Link to="/guide/session">セッション・オープンマイクの始め方</Link>
+        </p>
+      </section>
     </div>
   )
 }

@@ -76,7 +76,9 @@ export function Layout() {
       </main>
       <footer className="site-footer">
         <Link to="/recruits">バンドメンバー募集</Link>
+        <Link to="/guide">音楽活動ガイド</Link>
         <Link to="/guide/band-member">メンバー募集の始め方</Link>
+        <Link to="/guide/first-live">初ライブまでの流れ</Link>
         <Link to="/tracks">作品シェア</Link>
         <Link to="/events">ライブ・イベント告知</Link>
         <Link to="/people">ミュージシャンを探す</Link>

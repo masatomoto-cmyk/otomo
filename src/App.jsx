@@ -3,6 +3,7 @@ import { Layout } from './components/Layout'
 import { useAuth } from './lib/auth'
 import EventDetail from './pages/EventDetail'
 import GuideBandMember from './pages/GuideBandMember'
+import { GuideIndex, GuidePage } from './pages/Guides'
 import Events from './pages/Events'
 import Login from './pages/Login'
 import Notifications from './pages/Notifications'
@@ -27,13 +28,17 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<Timeline />} />
         <Route path="tracks" element={<Tracks />} />
+        <Route path="tracks/genre/:genreSlug" element={<Tracks />} />
         <Route path="tracks/:id" element={<TrackDetail />} />
         <Route path="recruits" element={<Recruits />} />
         <Route path="recruits/area/:areaSlug" element={<Recruits />} />
         <Route path="recruits/part/:partSlug" element={<Recruits />} />
         <Route path="recruits/:id" element={<RecruitDetail />} />
+        <Route path="guide" element={<GuideIndex />} />
         <Route path="guide/band-member" element={<GuideBandMember />} />
+        <Route path="guide/:slug" element={<GuidePage />} />
         <Route path="events" element={<Events />} />
+        <Route path="events/area/:areaSlug" element={<Events />} />
         <Route path="events/:id" element={<EventDetail />} />
         <Route path="people" element={<People />} />
         <Route path="u/:id" element={<Profile />} />
