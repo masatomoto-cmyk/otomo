@@ -74,6 +74,13 @@ export function Layout() {
       <main className="main">
         <Outlet />
       </main>
+      <footer className="site-footer">
+        <Link to="/recruits">バンドメンバー募集</Link>
+        <Link to="/guide/band-member">メンバー募集の始め方</Link>
+        <Link to="/tracks">作品シェア</Link>
+        <Link to="/events">ライブ・イベント告知</Link>
+        <Link to="/people">ミュージシャンを探す</Link>
+      </footer>
       <nav className="nav-bottom">
         {NAV.map((n) => (
           <NavLink key={n.to} to={n.to} end={n.end}>

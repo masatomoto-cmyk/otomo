@@ -1,21 +1,56 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { UserChip } from '../components/Avatar'
 import { Composer, ErrorText, Field } from '../components/Composer'
 import { TagPicker, Tags } from '../components/Tags'
 import { api } from '../lib/api'
-import { AREAS, GENRES, PARTS } from '../lib/constants'
+import { AREA_PLACES, AREA_SLUGS, AREAS, fromSlug, GENRES, PART_SLUGS, PARTS } from '../lib/constants'
 import { timeAgo } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
 import { usePageMeta } from '../lib/meta'
 
+// 地域・パートの絞り込みは URL で表す（/recruits/area/kanto、/recruits/part/bass）。
+// 検索エンジンがそれぞれを別のページとして扱えるようにするため
+function recruitsPath(area, part) {
+  if (area && part) return `/recruits/area/${AREA_SLUGS[area]}?part=${PART_SLUGS[part]}`
+  if (area) return `/recruits/area/${AREA_SLUGS[area]}`
+  if (part) return `/recruits/part/${PART_SLUGS[part]}`
+  return '/recruits'
+}
+
+function pageText(area, part) {
+  if (area && part) {
+    return { h1: `${area}の${part}募集`, title: `${area}の${part}メンバー募集`, lead: `${area}で${part}を探しているバンド・ユニットの募集一覧です。` }
+  }
+  if (area) {
+    return {
+      h1: `${area}のバンドメンバー募集`,
+      title: `${area}のバンドメンバー募集（${AREA_PLACES[area].split('・').slice(0, 3).join('・')}など）`,
+      lead: `${AREA_PLACES[area]}などで活動するバンド・ユニットのメンバー募集です。ボーカル・ギター・ベース・ドラム・キーボードなど、パートでも絞り込めます。`,
+    }
+  }
+  if (part) {
+    return {
+      h1: `${part}のメンバー募集`,
+      title: `${part}のメンバー募集（バンド・セッション・コラボ）`,
+      lead: `${part}を探しているバンド、セッション、コラボの募集一覧です。地域でも絞り込めます。${part}として加入したい人は、気になる募集に応募コメントを送ってみましょう。`,
+    }
+  }
+  return {
+    h1: 'バンドメンバー募集',
+    title: 'バンドメンバー募集 — パート・地域から無料で探せる',
+    lead: 'ボーカル・ギター・ベース・ドラム・キーボード・DTMなど、パートと地域からバンドメンバーやセッション仲間、コラボ相手を探せます。募集の掲載・応募は無料です。',
+  }
+}
+
 export default function Recruits() {
-  usePageMeta({
-    title: 'バンドメンバー募集 — パート・地域から探せる',
-    description: 'ボーカル・ギター・ベース・ドラム・キーボード・DTMなど、パートと地域でバンドメンバーやセッション仲間、コラボ相手を探せる。無料で募集を出せます。',
-  })
-  const [part, setPart] = useState('')
-  const [area, setArea] = useState('')
+  const navigate = useNavigate()
+  const { areaSlug, partSlug } = useParams()
+  const [query] = useSearchParams()
+  const area = fromSlug(AREA_SLUGS, areaSlug)
+  const part = fromSlug(PART_SLUGS, partSlug ?? query.get('part'))
+  const setArea = (a) => navigate(recruitsPath(a, part))
+  const setPart = (p) => navigate(recruitsPath(area, p))
   const [openOnly, setOpenOnly] = useState(true)
   const recruits = useAsync(
     () =>
@@ -25,12 +60,24 @@ export default function Recruits() {
       }),
     [part, area, openOnly],
   )
+  const text = pageText(area, part)
+  usePageMeta({
+    title: text.title,
+    description: text.lead,
+    // 該当する募集がない地域・パートのページや、地域×パートの組み合わせは検索に出さない（中身の薄いページを増やさない）
+    noindex: (area && part) || ((area || part) && recruits.data?.length === 0),
+  })
 
   return (
     <div className="stack">
       <div className="page-head">
-        <h1>メンバー募集</h1>
-        <p className="muted">バンドメンバー、セッション仲間、コラボ相手を探そう</p>
+        {(area || part) && (
+          <nav className="crumbs small" aria-label="パンくずリスト">
+            <Link to="/recruits">バンドメンバー募集</Link> › <span>{text.h1}</span>
+          </nav>
+        )}
+        <h1>{text.h1}</h1>
+        <p className="muted">{text.lead}</p>
       </div>
       <Composer label="募集を出す">
         {(close) => <RecruitForm onDone={(r) => { recruits.setData([r, ...(recruits.data ?? [])]); close() }} onCancel={close} />}
@@ -48,8 +95,39 @@ export default function Recruits() {
       </div>
       <ErrorText error={recruits.error} />
       {recruits.data?.map((r) => <RecruitCard key={r.id} r={r} />)}
-      {recruits.data?.length === 0 && <p className="empty">条件に合う募集がありません</p>}
+      {recruits.data?.length === 0 && (
+        <div className="empty">
+          <p>条件に合う募集はまだありません。</p>
+          <p className="small">
+            最初の募集を出してみませんか？ 書き方は <Link to="/guide/band-member">バンドメンバー募集の始め方</Link> で紹介しています。
+          </p>
+        </div>
+      )}
+      <BrowseLinks />
     </div>
+  )
+}
+
+// 地域・パート別ページへのリンク集（検索エンジンがページをたどれるように、すべて普通のリンクにする）
+function BrowseLinks() {
+  return (
+    <section className="card browse">
+      <h2>地域から探す</h2>
+      <div className="tags">
+        {AREAS.map((a) => (
+          <Link key={a} className="tag" to={`/recruits/area/${AREA_SLUGS[a]}`}>{a}</Link>
+        ))}
+      </div>
+      <h2>パートから探す</h2>
+      <div className="tags">
+        {PARTS.filter((p) => p !== 'その他').map((p) => (
+          <Link key={p} className="tag" to={`/recruits/part/${PART_SLUGS[p]}`}>{p}募集</Link>
+        ))}
+      </div>
+      <p className="small">
+        はじめて募集する人へ: <Link to="/guide/band-member">バンドメンバー募集の始め方（募集文テンプレート付き）</Link>
+      </p>
+    </section>
   )
 }
 

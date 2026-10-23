@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { useAuth } from './lib/auth'
 import EventDetail from './pages/EventDetail'
+import GuideBandMember from './pages/GuideBandMember'
 import Events from './pages/Events'
 import Login from './pages/Login'
 import Notifications from './pages/Notifications'
@@ -28,7 +29,10 @@ export default function App() {
         <Route path="tracks" element={<Tracks />} />
         <Route path="tracks/:id" element={<TrackDetail />} />
         <Route path="recruits" element={<Recruits />} />
+        <Route path="recruits/area/:areaSlug" element={<Recruits />} />
+        <Route path="recruits/part/:partSlug" element={<Recruits />} />
         <Route path="recruits/:id" element={<RecruitDetail />} />
+        <Route path="guide/band-member" element={<GuideBandMember />} />
         <Route path="events" element={<Events />} />
         <Route path="events/:id" element={<EventDetail />} />
         <Route path="people" element={<People />} />
