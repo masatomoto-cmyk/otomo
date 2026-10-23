@@ -1,8 +1,8 @@
 // X・LINE・Discord などのクローラー向けに、ページごとのタイトルと説明を埋め込んだ HTML を返す。
 // この SPA は JS を実行しないクローラーには中身が見えないため、vercel.json でクローラーだけここに回している。
 const SITE = 'OTOMO'
-const DEFAULT_TITLE = 'OTOMO — 音でつながる'
-const DEFAULT_DESC = '作品に感想が届く。バンド仲間が見つかる。ライブを告知できる。音楽好きとミュージシャンのための交流アプリ。'
+const DEFAULT_TITLE = 'OTOMO（オトモ）｜バンドメンバー募集・自作曲の感想・ライブ告知の音楽交流アプリ'
+const DEFAULT_DESC = 'バンドメンバー募集、自作曲・演奏動画への感想、ライブ告知ができる無料の音楽交流アプリ。いいね数を競わず、言葉が届く。'
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const esc = (s) =>

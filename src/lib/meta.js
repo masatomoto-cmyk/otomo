@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 
 const SITE = 'OTOMO'
-const DEFAULT_DESC = '作品に感想が届く。バンド仲間が見つかる。ライブを告知できる。音楽好きとミュージシャンのための交流アプリ。'
+const DEFAULT_TITLE = 'OTOMO（オトモ）｜バンドメンバー募集・自作曲の感想・ライブ告知の音楽交流アプリ'
+const DEFAULT_DESC = 'バンドメンバー募集、自作曲・演奏動画への感想、ライブ告知ができる無料の音楽交流アプリ。いいね数を競わず、言葉が届く。DTM・宅録・弾き語り・バンドの人へ。'
 
 function setMeta(selector, attr, value) {
   let el = document.head.querySelector(selector)
@@ -20,7 +21,7 @@ function setMeta(selector, attr, value) {
 export function usePageMeta({ title, description, noindex = false, jsonLd = null }) {
   const ld = jsonLd ? JSON.stringify(jsonLd) : ''
   useEffect(() => {
-    document.title = title ? `${title}｜${SITE}` : `${SITE} — 音でつながる`
+    document.title = title ? `${title}｜${SITE}` : DEFAULT_TITLE
     setMeta('meta[name="description"]', 'content', (description || DEFAULT_DESC).replace(/\s+/g, ' ').slice(0, 160))
     setMeta('link[rel="canonical"]', 'href', `${window.location.origin}${window.location.pathname}`)
     setMeta('meta[name="robots"]', 'content', noindex ? 'noindex' : 'index,follow')

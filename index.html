@@ -4,18 +4,55 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="作品に感想が届く。バンド仲間が見つかる。ライブを告知できる。音楽好きとミュージシャンのための交流アプリ。" />
+    <meta name="description" content="バンドメンバー募集、自作曲・演奏動画への感想、ライブ告知ができる無料の音楽交流アプリ。いいね数を競わず、言葉が届く。DTM・宅録・弾き語り・バンドの人へ。" />
     <meta property="og:site_name" content="OTOMO" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="ja_JP" />
-    <meta property="og:title" content="OTOMO — 音でつながる" />
-    <meta property="og:description" content="作品に感想が届く。バンド仲間が見つかる。ライブを告知できる。音楽好きとミュージシャンのための交流アプリ。" />
+    <meta property="og:title" content="OTOMO（オトモ）｜バンドメンバー募集・自作曲の感想・ライブ告知の音楽交流アプリ" />
+    <meta property="og:description" content="バンドメンバー募集、自作曲・演奏動画への感想、ライブ告知ができる無料の音楽交流アプリ。いいね数を競わず、言葉が届く。" />
     <meta property="og:image" content="https://otomo-alpha.vercel.app/og.png" />
     <meta name="twitter:card" content="summary_large_image" />
-    <title>OTOMO — 音でつながる</title>
+    <title>OTOMO（オトモ）｜バンドメンバー募集・自作曲の感想・ライブ告知の音楽交流アプリ</title>
+    <!-- 検索結果にサイト名「OTOMO」を出し、アプリであることを伝える構造化データ -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "name": "OTOMO",
+            "alternateName": ["オトモ", "OTOMO 音楽交流アプリ"],
+            "url": "https://otomo-alpha.vercel.app/",
+            "inLanguage": "ja"
+          },
+          {
+            "@type": "WebApplication",
+            "name": "OTOMO",
+            "url": "https://otomo-alpha.vercel.app/",
+            "applicationCategory": "SocialNetworkingApplication",
+            "operatingSystem": "Web",
+            "inLanguage": "ja",
+            "description": "バンドメンバー募集、自作曲・演奏動画への感想、ライブ告知ができる無料の音楽交流アプリ。",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- JS を実行する前に見える中身（検索エンジン・JS無効の人向け）。React が起動すると置き換わる -->
+    <div id="root">
+      <main style="max-width: 640px; margin: 0 auto; padding: 24px 16px; font-family: sans-serif; line-height: 1.7">
+        <h1>OTOMO — 音でつながる音楽交流アプリ</h1>
+        <p>作品に感想が届く。バンド仲間が見つかる。ライブを告知できる。いいね数を競わない、音楽好きとミュージシャンのための無料の交流アプリです。</p>
+        <ul>
+          <li><a href="/recruits">バンドメンバー募集</a> — ボーカル・ギター・ベース・ドラム・キーボード・DTM をパートと地域で探す</li>
+          <li><a href="/tracks">作品シェア</a> — DTM・宅録・弾き語り・バンドの自作曲や演奏動画に感想をもらう</li>
+          <li><a href="/events">ライブ・イベント告知</a> — ライブハウス・セッション・オープンマイクの予定を探す</li>
+          <li><a href="/people">ミュージシャンを探す</a> — パート・地域別</li>
+        </ul>
+      </main>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
