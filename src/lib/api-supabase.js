@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const WITH_PROFILE = '*, profile:profiles(id, display_name)'
+// events は event_attendees 経由でも profiles とつながるので、外部キー名で投稿者を明示する
+const withProfile = (table) => `*, profile:profiles!${table}_user_id_fkey(id, display_name)`
 
 function unwrap({ data, error }) {
   if (error) throw new Error(error.message)
@@ -31,7 +32,8 @@ export function createSupabaseApi(url, key) {
         const { data, error } = await sb.auth.signUp({
           email,
           password,
-          options: { data: { display_name: displayName } },
+          // 確認メールのリンクから、このアプリに戻ってくる（Supabase の Redirect URLs に登録が必要）
+          options: { data: { display_name: displayName }, emailRedirectTo: window.location.origin },
         })
         if (error) throw new Error(error.message)
         return { needsConfirmation: !data.session }
@@ -60,20 +62,20 @@ export function createSupabaseApi(url, key) {
 
     // filters: { eq: {col: v}, contains: {col: v}, gte: {col: v} }
     async list(table, { eq = {}, contains = {}, gte = {}, order = 'created_at', ascending = false, limit = 50 } = {}) {
-      let q = sb.from(table).select(WITH_PROFILE)
+      let q = sb.from(table).select(withProfile(table))
       for (const [col, v] of Object.entries(eq)) q = q.eq(col, v)
       for (const [col, v] of Object.entries(contains)) q = q.contains(col, [v])
       for (const [col, v] of Object.entries(gte)) q = q.gte(col, v)
       return unwrap(await q.order(order, { ascending }).limit(limit))
     },
     async get(table, id) {
-      return unwrap(await sb.from(table).select(WITH_PROFILE).eq('id', id).maybeSingle())
+      return unwrap(await sb.from(table).select(withProfile(table)).eq('id', id).maybeSingle())
     },
     async create(table, row) {
-      return unwrap(await sb.from(table).insert(row).select(WITH_PROFILE).single())
+      return unwrap(await sb.from(table).insert(row).select(withProfile(table)).single())
     },
     async update(table, id, patch) {
-      return unwrap(await sb.from(table).update(patch).eq('id', id).select(WITH_PROFILE).single())
+      return unwrap(await sb.from(table).update(patch).eq('id', id).select(withProfile(table)).single())
     },
     async remove(table, id) {
       unwrap(await sb.from(table).delete().eq('id', id))
@@ -83,7 +85,7 @@ export function createSupabaseApi(url, key) {
       return unwrap(
         await sb
           .from('comments')
-          .select(WITH_PROFILE)
+          .select(withProfile('comments'))
           .eq('target_type', targetType)
           .eq('target_id', targetId)
           .order('created_at'),
@@ -91,7 +93,7 @@ export function createSupabaseApi(url, key) {
     },
     async addComment(targetType, targetId, body) {
       return unwrap(
-        await sb.from('comments').insert({ target_type: targetType, target_id: targetId, body }).select(WITH_PROFILE).single(),
+        await sb.from('comments').insert({ target_type: targetType, target_id: targetId, body }).select(withProfile('comments')).single(),
       )
     },
 

@@ -176,3 +176,7 @@ create view public.comment_counts with (security_invoker = true) as
   select target_type, target_id, count(*)::int as count
   from public.comments
   group by target_type, target_id;
+
+-- トリガー専用の関数は API (rpc) から呼べないようにする
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+revoke execute on function public.set_reaction_owner() from public, anon, authenticated;
