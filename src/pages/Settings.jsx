@@ -6,6 +6,8 @@ import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { AREAS, GENRES, PARTS } from '../lib/constants'
 import { isHttpUrl } from '../lib/embed'
+import { useAsync } from '../lib/useAsync'
+import { Avatar } from '../components/Avatar'
 
 export default function Settings() {
   const { user, profile, refreshProfile } = useAuth()
@@ -13,6 +15,7 @@ export default function Settings() {
   const [form, setForm] = useState(null)
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
+  const blocks = useAsync(() => api.listMyBlocks(), [])
 
   useEffect(() => {
     if (profile && !form) {
@@ -38,7 +41,13 @@ export default function Settings() {
     }
   }
 
+  async function unblock(userId) {
+    await api.unblock(userId)
+    blocks.reload()
+  }
+
   return (
+    <div className="stack">
     <form onSubmit={submit} className="card stack-sm">
       <h1>プロフィール編集</h1>
       <Field label="表示名"><input required maxLength={30} value={form.display_name} onChange={set('display_name')} /></Field>
@@ -58,5 +67,21 @@ export default function Settings() {
         <button className="btn" disabled={busy}>保存</button>
       </div>
     </form>
+    <section className="card stack-sm">
+      <h2>ブロック中のユーザー</h2>
+      {blocks.data?.length === 0 && <p className="muted small">ブロックしているユーザーはいません</p>}
+      <ul className="blocked-list">
+        {blocks.data?.map((b) => (
+          <li key={b.blocked_id}>
+            <span className="user-chip">
+              <Avatar profile={b.profile} size={28} />
+              <strong>{b.profile?.display_name}</strong>
+            </span>
+            <button className="btn ghost small" onClick={() => unblock(b.blocked_id)}>解除</button>
+          </li>
+        ))}
+      </ul>
+    </section>
+    </div>
   )
 }

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { UserChip } from '../components/Avatar'
 import { Composer, ErrorText, Field } from '../components/Composer'
+import { ExternalEvents } from '../components/ExternalEvents'
 import { api } from '../lib/api'
 import { AREAS } from '../lib/constants'
 import { isHttpUrl } from '../lib/embed'
@@ -10,6 +11,7 @@ import { useAsync } from '../lib/useAsync'
 
 export default function Events() {
   const [area, setArea] = useState('')
+  const [tab, setTab] = useState('otomo')
   // 開いた時点を基準に「これから」のイベントを出す
   const since = useMemo(() => new Date(Date.now() - 3 * 3600_000).toISOString(), [])
   const events = useAsync(
@@ -23,6 +25,15 @@ export default function Events() {
         <h1>ライブ・イベント</h1>
         <p className="muted">ライブ、セッション、オープンマイク、オンライン作業会の告知</p>
       </div>
+      <div className="tabs" role="tablist">
+        <button role="tab" aria-selected={tab === 'otomo'} className={tab === 'otomo' ? 'on' : ''} onClick={() => setTab('otomo')}>
+          OTOMOのイベント
+        </button>
+        <button role="tab" aria-selected={tab === 'external'} className={tab === 'external' ? 'on' : ''} onClick={() => setTab('external')}>
+          全国のライブハウス
+        </button>
+      </div>
+      {tab === 'otomo' && (
       <Composer label="イベントを告知する">
         {(close) => (
           <EventForm
@@ -34,15 +45,22 @@ export default function Events() {
           />
         )}
       </Composer>
+      )}
       <div className="filters">
         <select value={area} onChange={(e) => setArea(e.target.value)} aria-label="地域">
           <option value="">すべての地域</option>
           {AREAS.map((a) => <option key={a}>{a}</option>)}
         </select>
       </div>
-      <ErrorText error={events.error} />
-      {events.data?.map((ev) => <EventCard key={ev.id} ev={ev} />)}
-      {events.data?.length === 0 && <p className="empty">予定されているイベントはありません</p>}
+      {tab === 'external' ? (
+        <ExternalEvents area={area} />
+      ) : (
+        <>
+          <ErrorText error={events.error} />
+          {events.data?.map((ev) => <EventCard key={ev.id} ev={ev} />)}
+          {events.data?.length === 0 && <p className="empty">予定されているイベントはありません</p>}
+        </>
+      )}
     </div>
   )
 }

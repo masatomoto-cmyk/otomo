@@ -2,6 +2,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Avatar, UserChip } from '../components/Avatar'
 import { Comments } from '../components/Comments'
 import { ErrorText } from '../components/Composer'
+import { ReportButton } from '../components/ReportButton'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { formatDateTime } from '../lib/format'
@@ -43,6 +44,7 @@ export default function EventDetail() {
       <div className="row actions">
         <button className={`btn ${going ? 'ghost' : ''}`} onClick={toggleAttend}>{going ? '✓ 参加予定' : '参加する'}</button>
         {user?.id === ev.user_id && <button className="link-btn small push" onClick={remove}>削除</button>}
+        <ReportButton type="event" id={ev.id} ownerId={ev.user_id} className="push" />
       </div>
       <section>
         <h3>参加予定 <span className="muted">{attendees.data?.length ?? ''}</span></h3>

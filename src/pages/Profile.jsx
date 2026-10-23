@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Avatar } from '../components/Avatar'
 import { ErrorText } from '../components/Composer'
 import { MusicEmbed } from '../components/MusicEmbed'
+import { ReportButton } from '../components/ReportButton'
 import { Tags } from '../components/Tags'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -21,10 +22,27 @@ const TABS = [
 export default function Profile() {
   const { id } = useParams()
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [tab, setTab] = useState('tracks')
+  const [isBlocked, setIsBlocked] = useState(() => api.isBlocked(id))
+  // ブロック一覧はログイン確定後に読み込まれるので、ユーザーやページが変わったら取り直す
+  useEffect(() => setIsBlocked(api.isBlocked(id)), [id, user?.id])
   const profile = useAsync(() => api.getProfile(id), [id])
   const items = useAsync(() => api.list(tab, { eq: { user_id: id } }), [tab, id])
   const p = profile.data
+
+  async function toggleBlock() {
+    if (!user) return navigate('/login')
+    if (isBlocked) {
+      await api.unblock(id)
+      setIsBlocked(false)
+      items.reload()
+    } else {
+      if (!confirm(`${p.display_name} さんをブロックしますか？\n相手の投稿やコメントが表示されなくなり、相手はあなたの投稿にコメント・リアクションできなくなります。ブロックしたことは相手に通知されません。`)) return
+      await api.block(id)
+      setIsBlocked(true)
+    }
+  }
 
   if (profile.error) return <ErrorText error={profile.error} />
   if (profile.loading && !p) return null
@@ -37,7 +55,14 @@ export default function Profile() {
         <div className="stack-xs grow">
           <div className="row between">
             <h1>{p.display_name}</h1>
-            {user?.id === id && <Link to="/settings" className="btn ghost small">プロフィール編集</Link>}
+            {user?.id === id ? (
+              <Link to="/settings" className="btn ghost small">プロフィール編集</Link>
+            ) : (
+              <div className="row">
+                <button className="btn ghost small" onClick={toggleBlock}>{isBlocked ? 'ブロック解除' : 'ブロック'}</button>
+                <ReportButton type="profile" id={id} ownerId={id} />
+              </div>
+            )}
           </div>
           {p.area && <span className="muted small">📍 {p.area}</span>}
           <Tags items={p.parts} tone="accent" />
@@ -47,6 +72,10 @@ export default function Profile() {
         </div>
       </section>
 
+      {isBlocked ? (
+        <p className="empty">ブロック中のユーザーです。投稿は表示されません。</p>
+      ) : (
+        <>
       <div className="tabs" role="tablist">
         {TABS.map((t) => (
           <button key={t.key} role="tab" aria-selected={tab === t.key} className={tab === t.key ? 'on' : ''} onClick={() => setTab(t.key)}>
@@ -79,6 +108,8 @@ export default function Profile() {
         )
       })}
       {!items.loading && items.data?.length === 0 && <p className="empty">まだありません</p>}
+        </>
+      )}
     </div>
   )
 }

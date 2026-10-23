@@ -4,6 +4,7 @@ import { Comments } from '../components/Comments'
 import { ErrorText } from '../components/Composer'
 import { MusicEmbed } from '../components/MusicEmbed'
 import { Reactions } from '../components/Reactions'
+import { ReportButton } from '../components/ReportButton'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { timeAgo } from '../lib/format'
@@ -39,6 +40,7 @@ export default function TrackDetail() {
       <div className="row actions">
         <Reactions type="track" id={t.id} ownerId={t.user_id} />
         {user?.id === t.user_id && <button className="link-btn small push" onClick={remove}>削除</button>}
+        <ReportButton type="track" id={t.id} ownerId={t.user_id} className="push" />
       </div>
       <Reactions type="track" id={t.id} ownerId={t.user_id} showReceived />
       <Comments type="track" id={t.id} title="フィードバック" placeholder="良かったところ・気になったところを伝えよう" />

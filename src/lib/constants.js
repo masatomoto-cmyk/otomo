@@ -16,3 +16,11 @@ export const REACTIONS_BY_TYPE = {
   track: ['listened', 'moved', 'collab'],
   recruitment: ['interested'],
 }
+
+export const REPORT_REASONS = {
+  spam: 'スパム・宣伝目的',
+  harassment: '嫌がらせ・誹謗中傷',
+  inappropriate: '不適切な内容',
+  impersonation: 'なりすまし',
+  other: 'その他',
+}

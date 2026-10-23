@@ -1,6 +1,6 @@
 // Supabase 未設定時に使う、localStorage だけで動くデモ用データ層。
 // api-supabase.js と同じインターフェースを持つ。
-const DB_KEY = 'otomo-demo-db-v2'
+const DB_KEY = 'otomo-demo-db-v3'
 const USER_KEY = 'otomo-demo-user'
 
 const now = Date.now()
@@ -39,6 +39,8 @@ function seed() {
       { id: 'c1', user_id: 'u-saki', target_type: 'track', target_id: 't1', body: 'イントロから引き込まれました！サビはもう少し明るい音色でも合いそう', created_at: ago(3) },
       { id: 'c2', user_id: 'u-mio', target_type: 'recruitment', target_id: 'r1', body: '素敵な企画ですね、応援してます！', created_at: ago(8) },
     ],
+    blocks: [],
+    reports: [],
     reactions: [
       { user_id: 'u-ken', target_type: 'post', target_id: 'p1', kind: 'relate', owner_id: 'u-mio', created_at: ago(1) },
       { user_id: 'u-saki', target_type: 'track', target_id: 't1', kind: 'moved', owner_id: 'u-mio', created_at: ago(3) },
@@ -228,6 +230,41 @@ export function createDemoApi() {
       const counts = {}
       for (const c of db.comments) if (c.target_type === targetType) counts[c.target_id] = (counts[c.target_id] ?? 0) + 1
       return delay(counts)
+    },
+
+    async listMyBlocks() {
+      const me = getUserId()
+      return delay(db.blocks.filter((b) => b.blocker_id === me).map((b) => ({ blocked_id: b.blocked_id, profile: publicProfile(b.blocked_id) })))
+    },
+    async block(userId) {
+      const me = requireUser()
+      if (!db.blocks.some((b) => b.blocker_id === me && b.blocked_id === userId)) {
+        db.blocks.push({ blocker_id: me, blocked_id: userId, created_at: new Date().toISOString() })
+        commit()
+      }
+    },
+    async unblock(userId) {
+      const me = requireUser()
+      db.blocks = db.blocks.filter((b) => !(b.blocker_id === me && b.blocked_id === userId))
+      commit()
+    },
+    async report(targetType, targetId, reason, detail) {
+      const me = requireUser()
+      if (!db.reports.some((r) => r.reporter_id === me && r.target_type === targetType && r.target_id === targetId)) {
+        db.reports.push({ reporter_id: me, target_type: targetType, target_id: targetId, reason, detail, created_at: new Date().toISOString() })
+        commit()
+      }
+    },
+    async externalEvents({ area = '', small = true } = {}) {
+      const events = [
+        { id: 'demo-1', name: '下北沢 平日ブッキング 4マン', startDate: later(2).slice(0, 10), venue: '下北沢 某ライブハウス', city: '世田谷区', area: '関東', performers: ['バンドA', 'バンドB', 'バンドC', 'バンドD'], url: 'https://example.com', capacity: 250 },
+        { id: 'demo-2', name: '心斎橋 弾き語りナイト', startDate: later(5).slice(0, 10), venue: '心斎橋 某カフェバー', city: '大阪市', area: '近畿', performers: ['シンガーE', 'シンガーF'], url: 'https://example.com', capacity: 60 },
+      ]
+      return delay({
+        configured: true,
+        source: 'demo',
+        events: events.filter((e) => (!area || e.area === area) && (!small || e.capacity <= 500)),
+      })
     },
 
     async getAttendees(eventId) {

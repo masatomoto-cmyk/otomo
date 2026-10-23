@@ -19,7 +19,11 @@ function ReactionButtons({ type, id }) {
 
   async function toggle(kind) {
     if (!user) return navigate('/login')
-    mine.setData(await api.toggleReaction(type, id, kind))
+    try {
+      mine.setData(await api.toggleReaction(type, id, kind))
+    } catch {
+      // 相手にブロックされている場合などは送れない（RLS で拒否される）
+    }
   }
 
   return REACTIONS_BY_TYPE[type].map((kind) => {

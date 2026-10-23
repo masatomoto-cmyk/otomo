@@ -3,6 +3,7 @@ import { UserChip } from '../components/Avatar'
 import { Comments } from '../components/Comments'
 import { ErrorText } from '../components/Composer'
 import { Reactions } from '../components/Reactions'
+import { ReportButton } from '../components/ReportButton'
 import { Tags } from '../components/Tags'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -51,6 +52,7 @@ export default function RecruitDetail() {
             <button className="link-btn small" onClick={remove}>削除</button>
           </>
         )}
+        <ReportButton type="recruitment" id={r.id} ownerId={r.user_id} className="push" />
       </div>
       <Reactions type="recruitment" id={r.id} ownerId={r.user_id} showReceived />
       <Comments

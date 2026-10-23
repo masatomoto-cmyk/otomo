@@ -5,21 +5,27 @@ import { useAuth } from '../lib/auth'
 import { timeAgo } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
 import { Avatar } from './Avatar'
+import { ReportButton } from './ReportButton'
 
 export function Comments({ type, id, title = 'コメント', placeholder = 'コメントを書く' }) {
   const { user } = useAuth()
   const comments = useAsync(() => api.listComments(type, id), [type, id])
   const [body, setBody] = useState('')
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
 
   async function submit(e) {
     e.preventDefault()
     if (!body.trim()) return
     setBusy(true)
+    setError('')
     try {
       const c = await api.addComment(type, id, body.trim())
       comments.setData([...(comments.data ?? []), c])
       setBody('')
+    } catch {
+      // ブロックされている相手の投稿にはコメントできない（RLS で拒否される）
+      setError('コメントを送信できませんでした')
     } finally {
       setBusy(false)
     }
@@ -54,6 +60,7 @@ export function Comments({ type, id, title = 'コメント', placeholder = 'コ�
                     削除
                   </button>
                 )}
+                <ReportButton type="comment" id={c.id} ownerId={c.user_id} />
               </div>
               <p className="pre">{c.body}</p>
             </div>
@@ -72,6 +79,7 @@ export function Comments({ type, id, title = 'コメント', placeholder = 'コ�
           <Link to="/login">ログイン</Link>するとコメントできます
         </p>
       )}
+      {error && <p className="error">{error}</p>}
     </section>
   )
 }

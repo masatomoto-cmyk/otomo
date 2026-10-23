@@ -135,6 +135,36 @@ export function createSupabaseApi(url, key) {
       return Object.fromEntries(rows.map((r) => [r.target_id, r.count]))
     },
 
+    // ブロック
+    async listMyBlocks() {
+      const me = await currentUserId()
+      if (!me) return []
+      return unwrap(
+        await sb.from('blocks').select('blocked_id, profile:profiles!blocks_blocked_id_fkey(id, display_name)').order('created_at', { ascending: false }),
+      )
+    },
+    async block(userId) {
+      unwrap(await sb.from('blocks').insert({ blocked_id: userId }))
+    },
+    async unblock(userId) {
+      const me = await currentUserId()
+      unwrap(await sb.from('blocks').delete().match({ blocker_id: me, blocked_id: userId }))
+    },
+
+    // 通報。同じ対象への2回目は「受付済み」として扱う
+    async report(targetType, targetId, reason, detail) {
+      const { error } = await sb.from('reports').insert({ target_type: targetType, target_id: targetId, reason, detail })
+      if (error && error.code !== '23505') throw new Error(error.message)
+    },
+
+    // 外部のライブ情報（Edge Function 経由。API キーはサーバー側にだけ置く）
+    async externalEvents({ area = '', small = true } = {}) {
+      const q = new URLSearchParams({ area, small: small ? '1' : '0' })
+      const { data, error } = await sb.functions.invoke(`external-events?${q}`, { method: 'GET' })
+      if (error) throw new Error('ライブ情報を取得できませんでした')
+      return data
+    },
+
     async getAttendees(eventId) {
       const rows = unwrap(await sb.from('event_attendees').select('profile:profiles(id, display_name)').eq('event_id', eventId))
       return rows.map((r) => r.profile)
