@@ -95,20 +95,42 @@ export function createSupabaseApi(url, key) {
       )
     },
 
-    async getLikes(targetType, targetId) {
-      const rows = unwrap(await sb.from('likes').select('user_id').eq('target_type', targetType).eq('target_id', targetId))
+    // 自分が送ったリアクションの種類
+    async getMyReactions(targetType, targetId) {
       const me = await currentUserId()
-      return { count: rows.length, liked: rows.some((r) => r.user_id === me) }
+      if (!me) return []
+      const rows = unwrap(
+        await sb.from('reactions').select('kind').match({ user_id: me, target_type: targetType, target_id: targetId }),
+      )
+      return rows.map((r) => r.kind)
     },
-    async toggleLike(targetType, targetId) {
+    async toggleReaction(targetType, targetId, kind) {
       const me = await currentUserId()
-      const { liked } = await this.getLikes(targetType, targetId)
-      if (liked) {
-        unwrap(await sb.from('likes').delete().match({ user_id: me, target_type: targetType, target_id: targetId }))
+      const mine = await this.getMyReactions(targetType, targetId)
+      if (mine.includes(kind)) {
+        unwrap(await sb.from('reactions').delete().match({ user_id: me, target_type: targetType, target_id: targetId, kind }))
       } else {
-        unwrap(await sb.from('likes').insert({ target_type: targetType, target_id: targetId }))
+        unwrap(await sb.from('reactions').insert({ target_type: targetType, target_id: targetId, kind }))
       }
-      return this.getLikes(targetType, targetId)
+      return this.getMyReactions(targetType, targetId)
+    },
+    // 自分の投稿に届いたリアクション（RLS で受け手本人にしか返らない）
+    async getReceivedReactions(targetType, targetId) {
+      const me = await currentUserId()
+      if (!me) return []
+      return unwrap(
+        await sb
+          .from('reactions')
+          .select('kind, created_at, profile:profiles!reactions_user_id_fkey(id, display_name)')
+          .match({ owner_id: me, target_type: targetType, target_id: targetId })
+          .order('created_at', { ascending: false }),
+      )
+    },
+
+    // { [target_id]: コメント数 }
+    async commentCounts(targetType) {
+      const rows = unwrap(await sb.from('comment_counts').select('target_id, count').eq('target_type', targetType))
+      return Object.fromEntries(rows.map((r) => [r.target_id, r.count]))
     },
 
     async getAttendees(eventId) {

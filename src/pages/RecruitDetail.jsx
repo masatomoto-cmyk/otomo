@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { UserChip } from '../components/Avatar'
 import { Comments } from '../components/Comments'
 import { ErrorText } from '../components/Composer'
-import { LikeButton } from '../components/LikeButton'
+import { Reactions } from '../components/Reactions'
 import { Tags } from '../components/Tags'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -44,7 +44,7 @@ export default function RecruitDetail() {
       </div>
       {r.body && <p className="pre">{r.body}</p>}
       <div className="row actions">
-        <LikeButton type="recruitment" id={r.id} label="気になる" />
+        <Reactions type="recruitment" id={r.id} ownerId={r.user_id} />
         {mine && (
           <>
             <button className="chip-btn push" onClick={toggleOpen}>{r.is_open ? '締め切る' : '募集を再開'}</button>
@@ -52,6 +52,7 @@ export default function RecruitDetail() {
           </>
         )}
       </div>
+      <Reactions type="recruitment" id={r.id} ownerId={r.user_id} showReceived />
       <Comments
         type="recruitment"
         id={r.id}

@@ -20,7 +20,7 @@ export function toEmbed(url) {
   if (host === 'soundcloud.com') {
     return {
       kind: 'soundcloud',
-      src: `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%237c5cff&visual=false`,
+      src: `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%231f883d&visual=false`,
       height: 166,
     }
   }

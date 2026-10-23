@@ -1,6 +1,6 @@
 // Supabase 未設定時に使う、localStorage だけで動くデモ用データ層。
 // api-supabase.js と同じインターフェースを持つ。
-const DB_KEY = 'otomo-demo-db-v1'
+const DB_KEY = 'otomo-demo-db-v2'
 const USER_KEY = 'otomo-demo-user'
 
 const now = Date.now()
@@ -19,12 +19,12 @@ function seed() {
     ],
     posts: [
       { id: 'p1', user_id: 'u-mio', body: '新曲のミックスやっと終わった…！低音の処理で3日溶けた', music_url: '', created_at: ago(2) },
-      { id: 'p2', user_id: 'u-saki', body: '最近ずっとこれ聴いてる。コード進行が本当に気持ちいい', music_url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', created_at: ago(9) },
+      { id: 'p2', user_id: 'u-saki', body: '最近ずっとこれ聴いてる。コード進行が本当に気持ちいい', music_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', created_at: ago(9) },
       { id: 'p3', user_id: 'u-ken', body: '新しいスネア買いました。明日スタジオで試す🥁', music_url: '', created_at: ago(30) },
     ],
     tracks: [
       { id: 't1', user_id: 'u-mio', title: 'Neon Rain（デモ）', url: 'https://soundcloud.com/forss/flickermood', description: 'サビのシンセの音色に迷っています。率直な感想ください！', genre: 'エレクトロ', want_feedback: true, created_at: ago(5) },
-      { id: 't2', user_id: 'u-saki', title: '夜明けのうた 弾き語り', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', description: '初めて人前に出すオリジナル曲です。', genre: 'アコースティック', want_feedback: true, created_at: ago(48) },
+      { id: 't2', user_id: 'u-saki', title: '夜明けのうた 弾き語り', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', description: '初めて人前に出すオリジナル曲です。', genre: 'アコースティック', want_feedback: true, created_at: ago(48) },
     ],
     recruitments: [
       { id: 'r1', user_id: 'u-ken', title: '関西でオリジナル曲のロックバンド組みませんか', body: 'ギターボーカルとベースを探しています。月2〜3回スタジオ、半年後にライブが目標。', parts: ['ギター', 'ベース', 'ボーカル'], genres: ['ロック'], area: '近畿', is_open: true, created_at: ago(12) },
@@ -39,9 +39,10 @@ function seed() {
       { id: 'c1', user_id: 'u-saki', target_type: 'track', target_id: 't1', body: 'イントロから引き込まれました！サビはもう少し明るい音色でも合いそう', created_at: ago(3) },
       { id: 'c2', user_id: 'u-mio', target_type: 'recruitment', target_id: 'r1', body: '素敵な企画ですね、応援してます！', created_at: ago(8) },
     ],
-    likes: [
-      { user_id: 'u-ken', target_type: 'post', target_id: 'p1', created_at: ago(1) },
-      { user_id: 'u-saki', target_type: 'track', target_id: 't1', created_at: ago(3) },
+    reactions: [
+      { user_id: 'u-ken', target_type: 'post', target_id: 'p1', kind: 'relate', owner_id: 'u-mio', created_at: ago(1) },
+      { user_id: 'u-saki', target_type: 'track', target_id: 't1', kind: 'moved', owner_id: 'u-mio', created_at: ago(3) },
+      { user_id: 'u-ken', target_type: 'track', target_id: 't2', kind: 'listened', owner_id: 'u-saki', created_at: ago(6) },
     ],
   }
 }
@@ -195,18 +196,38 @@ export function createDemoApi() {
       return this.create('comments', { target_type: targetType, target_id: targetId, body })
     },
 
-    async getLikes(targetType, targetId) {
-      const rows = db.likes.filter((l) => l.target_type === targetType && l.target_id === targetId)
+    async getMyReactions(targetType, targetId) {
       const me = getUserId()
-      return delay({ count: rows.length, liked: rows.some((l) => l.user_id === me) })
+      return delay(
+        db.reactions.filter((r) => r.user_id === me && r.target_type === targetType && r.target_id === targetId).map((r) => r.kind),
+      )
     },
-    async toggleLike(targetType, targetId) {
+    async toggleReaction(targetType, targetId, kind) {
       const me = requireUser()
-      const idx = db.likes.findIndex((l) => l.user_id === me && l.target_type === targetType && l.target_id === targetId)
-      if (idx >= 0) db.likes.splice(idx, 1)
-      else db.likes.push({ user_id: me, target_type: targetType, target_id: targetId, created_at: new Date().toISOString() })
+      const table = { post: 'posts', track: 'tracks', recruitment: 'recruitments' }[targetType]
+      const owner = db[table].find((r) => r.id === targetId)?.user_id
+      if (!owner) throw new Error('対象が見つかりません')
+      const idx = db.reactions.findIndex(
+        (r) => r.user_id === me && r.target_type === targetType && r.target_id === targetId && r.kind === kind,
+      )
+      if (idx >= 0) db.reactions.splice(idx, 1)
+      else db.reactions.push({ user_id: me, target_type: targetType, target_id: targetId, kind, owner_id: owner, created_at: new Date().toISOString() })
       commit()
-      return this.getLikes(targetType, targetId)
+      return this.getMyReactions(targetType, targetId)
+    },
+    async getReceivedReactions(targetType, targetId) {
+      const me = getUserId()
+      const rows = db.reactions
+        .filter((r) => r.owner_id === me && r.target_type === targetType && r.target_id === targetId)
+        .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+        .map((r) => ({ kind: r.kind, created_at: r.created_at, profile: publicProfile(r.user_id) }))
+      return delay(rows)
+    },
+
+    async commentCounts(targetType) {
+      const counts = {}
+      for (const c of db.comments) if (c.target_type === targetType) counts[c.target_id] = (counts[c.target_id] ?? 0) + 1
+      return delay(counts)
     },
 
     async getAttendees(eventId) {

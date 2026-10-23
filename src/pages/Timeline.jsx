@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom'
 import { UserChip } from '../components/Avatar'
 import { Comments } from '../components/Comments'
 import { Composer, ErrorText, Field } from '../components/Composer'
-import { LikeButton } from '../components/LikeButton'
 import { MusicEmbed } from '../components/MusicEmbed'
+import { Reactions } from '../components/Reactions'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { isHttpUrl } from '../lib/embed'
@@ -93,7 +93,7 @@ export function PostCard({ post, onDeleted }) {
       <p className="pre post-body">{post.body}</p>
       <MusicEmbed url={post.music_url} />
       <div className="row actions">
-        <LikeButton type="post" id={post.id} />
+        <Reactions type="post" id={post.id} ownerId={post.user_id} />
         <button className="chip-btn" onClick={() => setShowComments((v) => !v)} aria-expanded={showComments}>
           💬 返信
         </button>
@@ -101,7 +101,12 @@ export function PostCard({ post, onDeleted }) {
           <button className="link-btn small push" onClick={remove}>削除</button>
         )}
       </div>
-      {showComments && <Comments type="post" id={post.id} title="返信" placeholder="返信を書く" />}
+      {showComments && (
+        <>
+          <Reactions type="post" id={post.id} ownerId={post.user_id} showReceived />
+          <Comments type="post" id={post.id} title="返信" placeholder="返信を書く" />
+        </>
+      )}
     </article>
   )
 }

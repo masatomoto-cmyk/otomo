@@ -11,7 +11,12 @@ import { useAsync } from '../lib/useAsync'
 
 export default function Tracks() {
   const [genre, setGenre] = useState('')
+  const [waitingOnly, setWaitingOnly] = useState(false)
   const tracks = useAsync(() => api.list('tracks', { eq: genre ? { genre } : {} }), [genre])
+  // 人気順は作らない。代わりにまだ誰からも感想をもらっていない作品を見つけやすくする
+  const counts = useAsync(() => api.commentCounts('track'), [])
+  const isWaiting = (t) => counts.data && !counts.data[t.id]
+  const shown = tracks.data?.filter((t) => !waitingOnly || isWaiting(t))
 
   return (
     <div className="stack">
@@ -20,16 +25,17 @@ export default function Tracks() {
         <p className="muted">自作曲・カバー・演奏動画を投稿して、感想やアドバイスをもらおう</p>
       </div>
       <Composer label="作品を投稿する">
-        {(close) => <TrackForm onDone={(t) => { tracks.setData([t, ...(tracks.data ?? [])]); close() }} onCancel={close} />}
+        {(close) => <TrackForm onDone={(t) => { tracks.setData([t, ...(tracks.data ?? [])]); counts.reload(); close() }} onCancel={close} />}
       </Composer>
       <div className="filters">
         <select value={genre} onChange={(e) => setGenre(e.target.value)} aria-label="ジャンル">
           <option value="">すべてのジャンル</option>
           {GENRES.map((g) => <option key={g}>{g}</option>)}
         </select>
+        <label className="check"><input type="checkbox" checked={waitingOnly} onChange={(e) => setWaitingOnly(e.target.checked)} /> 感想待ちだけ</label>
       </div>
       <ErrorText error={tracks.error} />
-      {tracks.data?.map((t) => (
+      {shown?.map((t) => (
         <article key={t.id} className="card">
           <div className="row between">
             <UserChip profile={t.profile}>{timeAgo(t.created_at)}</UserChip>
@@ -38,10 +44,14 @@ export default function Tracks() {
           <h2 className="card-title"><Link to={`/tracks/${t.id}`}>{t.title}</Link></h2>
           {t.genre && <span className="tag">{t.genre}</span>}
           <MusicEmbed url={t.url} />
-          <Link to={`/tracks/${t.id}`} className="more">感想を書く →</Link>
+          {isWaiting(t) ? (
+            <Link to={`/tracks/${t.id}`} className="first-voice">🌱 まだ感想がありません。最初のひとことを届けよう →</Link>
+          ) : (
+            <Link to={`/tracks/${t.id}`} className="more">感想を書く →</Link>
+          )}
         </article>
       ))}
-      {tracks.data?.length === 0 && <p className="empty">まだ作品がありません</p>}
+      {shown?.length === 0 && <p className="empty">{waitingOnly ? '感想待ちの作品はありません' : 'まだ作品がありません'}</p>}
     </div>
   )
 }

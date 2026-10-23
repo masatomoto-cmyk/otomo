@@ -2,8 +2,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { UserChip } from '../components/Avatar'
 import { Comments } from '../components/Comments'
 import { ErrorText } from '../components/Composer'
-import { LikeButton } from '../components/LikeButton'
 import { MusicEmbed } from '../components/MusicEmbed'
+import { Reactions } from '../components/Reactions'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { timeAgo } from '../lib/format'
@@ -37,9 +37,10 @@ export default function TrackDetail() {
       <MusicEmbed url={t.url} />
       {t.description && <p className="pre">{t.description}</p>}
       <div className="row actions">
-        <LikeButton type="track" id={t.id} label="よかった" />
+        <Reactions type="track" id={t.id} ownerId={t.user_id} />
         {user?.id === t.user_id && <button className="link-btn small push" onClick={remove}>削除</button>}
       </div>
+      <Reactions type="track" id={t.id} ownerId={t.user_id} showReceived />
       <Comments type="track" id={t.id} title="フィードバック" placeholder="良かったところ・気になったところを伝えよう" />
     </article>
   )
