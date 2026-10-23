@@ -10,6 +10,9 @@ function colorFor(id = '') {
 
 export function Avatar({ profile, size = 40 }) {
   const name = profile?.display_name ?? '?'
+  if (profile?.avatar_url) {
+    return <img className="avatar" src={profile.avatar_url} alt="" width={size} height={size} loading="lazy" style={{ width: size, height: size }} />
+  }
   return (
     <span className="avatar" style={{ width: size, height: size, fontSize: size * 0.42, background: colorFor(profile?.id) }} aria-hidden>
       {[...name][0]}

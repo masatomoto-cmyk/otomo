@@ -9,6 +9,7 @@ import { isHttpUrl } from '../lib/embed'
 import { normalizeSocial, SOCIALS } from '../lib/social'
 import { useAsync } from '../lib/useAsync'
 import { Avatar } from '../components/Avatar'
+import { toSquareWebp } from '../lib/image'
 
 export default function Settings() {
   const { user, profile, refreshProfile } = useAuth()
@@ -17,6 +18,8 @@ export default function Settings() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
   const blocks = useAsync(() => api.listMyBlocks(), [])
+  const [avatarBusy, setAvatarBusy] = useState(false)
+  const [avatarError, setAvatarError] = useState('')
 
   useEffect(() => {
     if (profile && !form) {
@@ -48,6 +51,36 @@ export default function Settings() {
     }
   }
 
+  // アイコンはフォームの保存を待たずに、選んだ時点で反映する
+  async function changeAvatar(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setAvatarBusy(true)
+    setAvatarError('')
+    try {
+      const url = await api.uploadAvatar(await toSquareWebp(file))
+      await api.updateProfile(user.id, { avatar_url: url })
+      await refreshProfile()
+    } catch (err) {
+      setAvatarError(err.message || 'アップロードできませんでした')
+    } finally {
+      setAvatarBusy(false)
+    }
+  }
+
+  async function deleteAvatar() {
+    if (!confirm('アイコン画像を削除しますか？')) return
+    setAvatarBusy(true)
+    try {
+      await api.updateProfile(user.id, { avatar_url: '' })
+      await api.removeAvatar()
+      await refreshProfile()
+    } finally {
+      setAvatarBusy(false)
+    }
+  }
+
   async function unblock(userId) {
     await api.unblock(userId)
     blocks.reload()
@@ -57,6 +90,22 @@ export default function Settings() {
     <div className="stack">
     <form onSubmit={submit} className="card stack-sm">
       <h1>プロフィール編集</h1>
+      <div className="avatar-edit">
+        <Avatar profile={profile} size={72} />
+        <div className="stack-xs">
+          <div className="row">
+            <label className={`btn ghost small ${avatarBusy ? 'disabled' : ''}`}>
+              {avatarBusy ? 'アップロード中…' : '画像を選ぶ'}
+              <input type="file" accept="image/*" onChange={changeAvatar} disabled={avatarBusy} hidden />
+            </label>
+            {profile?.avatar_url && (
+              <button type="button" className="link-btn small" onClick={deleteAvatar} disabled={avatarBusy}>削除</button>
+            )}
+          </div>
+          <span className="muted small">正方形に切り抜いて保存します。写真の位置情報は取り除かれます</span>
+          {avatarError && <p className="error">{avatarError}</p>}
+        </div>
+      </div>
       <Field label="表示名"><input required maxLength={30} value={form.display_name} onChange={set('display_name')} /></Field>
       <Field label="担当パート" group><TagPicker options={PARTS} value={form.parts} onChange={(parts) => setForm((f) => ({ ...f, parts }))} /></Field>
       <Field label="好きなジャンル" group><TagPicker options={GENRES} value={form.genres} onChange={(genres) => setForm((f) => ({ ...f, genres }))} /></Field>

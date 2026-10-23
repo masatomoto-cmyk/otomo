@@ -243,6 +243,7 @@ input[type='checkbox'] { width: auto; accent-color: var(--accent); }
   color: #fff;
   font-weight: 800;
 }
+.avatar { object-fit: cover; }
 .avatar-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .user-chip { display: inline-flex; align-items: center; gap: 10px; color: var(--text); min-width: 0; }
 .user-chip:hover { text-decoration: none; }
@@ -366,3 +367,7 @@ input[type='checkbox'] { width: auto; accent-color: var(--accent); }
 .social-instagram:hover { color: #e1306c; }
 .social-youtube:hover { color: #ff0000; }
 .social-x:hover { color: var(--text); }
+
+.avatar-edit { display: flex; align-items: center; gap: 16px; }
+.avatar-edit label.btn { cursor: pointer; }
+.btn.disabled { opacity: 0.5; pointer-events: none; }

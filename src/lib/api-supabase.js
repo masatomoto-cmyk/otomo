@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 // events は event_attendees 経由でも profiles とつながるので、外部キー名で投稿者を明示する
-const withProfile = (table) => `*, profile:profiles!${table}_user_id_fkey(id, display_name)`
+const withProfile = (table) => `*, profile:profiles!${table}_user_id_fkey(id, display_name, avatar_url)`
 
 function unwrap({ data, error }) {
   if (error) throw new Error(error.message)
@@ -52,6 +52,23 @@ export function createSupabaseApi(url, key) {
     },
     async updateProfile(id, patch) {
       return unwrap(await sb.from('profiles').update(patch).eq('id', id).select().single())
+    },
+    // アイコン画像を自分のフォルダに置いて公開 URL を返す。前の画像は消す
+    async uploadAvatar(blob) {
+      const me = await currentUserId()
+      // Safari は webp を書き出せず png になることがあるので、実際の形式に合わせる
+      const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/jpeg' ? 'jpg' : 'webp'
+      const path = `${me}/${Date.now()}.${ext}`
+      unwrap(await sb.storage.from('avatars').upload(path, blob, { contentType: blob.type || 'image/webp', cacheControl: '31536000' }))
+      const { data: list } = await sb.storage.from('avatars').list(me)
+      const old = (list ?? []).map((f) => `${me}/${f.name}`).filter((p) => p !== path)
+      if (old.length) await sb.storage.from('avatars').remove(old)
+      return sb.storage.from('avatars').getPublicUrl(path).data.publicUrl
+    },
+    async removeAvatar() {
+      const me = await currentUserId()
+      const { data: list } = await sb.storage.from('avatars').list(me)
+      if (list?.length) await sb.storage.from('avatars').remove(list.map((f) => `${me}/${f.name}`))
     },
     async listProfiles({ part, area } = {}) {
       let q = sb.from('profiles').select('*').order('created_at', { ascending: false }).limit(100)
@@ -123,7 +140,7 @@ export function createSupabaseApi(url, key) {
       return unwrap(
         await sb
           .from('reactions')
-          .select('kind, created_at, profile:profiles!reactions_user_id_fkey(id, display_name)')
+          .select('kind, created_at, profile:profiles!reactions_user_id_fkey(id, display_name, avatar_url)')
           .match({ owner_id: me, target_type: targetType, target_id: targetId })
           .order('created_at', { ascending: false }),
       )
@@ -140,7 +157,7 @@ export function createSupabaseApi(url, key) {
       const me = await currentUserId()
       if (!me) return []
       return unwrap(
-        await sb.from('blocks').select('blocked_id, profile:profiles!blocks_blocked_id_fkey(id, display_name)').order('created_at', { ascending: false }),
+        await sb.from('blocks').select('blocked_id, profile:profiles!blocks_blocked_id_fkey(id, display_name, avatar_url)').order('created_at', { ascending: false }),
       )
     },
     async block(userId) {
@@ -166,7 +183,7 @@ export function createSupabaseApi(url, key) {
     },
 
     async getAttendees(eventId) {
-      const rows = unwrap(await sb.from('event_attendees').select('profile:profiles(id, display_name)').eq('event_id', eventId))
+      const rows = unwrap(await sb.from('event_attendees').select('profile:profiles(id, display_name, avatar_url)').eq('event_id', eventId))
       return rows.map((r) => r.profile)
     },
     async toggleAttend(eventId) {

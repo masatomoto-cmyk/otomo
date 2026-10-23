@@ -85,7 +85,7 @@ export function createDemoApi() {
   const commit = () => save(db)
   const publicProfile = (id) => {
     const p = db.profiles.find((x) => x.id === id)
-    return p ? { id: p.id, display_name: p.display_name } : null
+    return p ? { id: p.id, display_name: p.display_name, avatar_url: p.avatar_url ?? '' } : null
   }
   const withProfile = (row) => row && { ...row, profile: publicProfile(row.user_id) }
   const requireUser = () => {
@@ -147,6 +147,17 @@ export function createDemoApi() {
       commit()
       return this.getProfile(id)
     },
+    // デモではデータ URL として localStorage に入れる（256px の webp なので数十KB）
+    async uploadAvatar(blob) {
+      requireUser()
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result)
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+      })
+    },
+    async removeAvatar() {},
     async listProfiles({ part, area } = {}) {
       const rows = db.profiles
         .filter((p) => (!part || p.parts.includes(part)) && (!area || p.area === area))
