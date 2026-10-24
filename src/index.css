@@ -423,3 +423,56 @@ input[type='checkbox'] { width: auto; accent-color: var(--accent); }
 }
 .site-footer { max-width: 720px; margin: 0 auto; padding: 8px 16px 32px; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.82rem; }
 .site-footer a { color: var(--muted); }
+
+/* 音楽の道具箱（/tools） */
+.tool { gap: 14px; }
+.tool-heading { font-size: 1rem; margin-top: 8px; }
+.tool-row { display: flex; flex-wrap: wrap; gap: 12px; }
+.tool-field { display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; min-width: 140px; flex: 1; }
+.tool-field.block { width: 100%; }
+.tool-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.tool-result { font-size: 1rem; margin: 8px 0; }
+.tool-result strong { font-size: 1.6rem; }
+.tool-result--inline { margin: 0; font-weight: 600; min-width: 4em; text-align: center; }
+.tool-result--over { color: var(--danger); }
+.tool-tap { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.tool-tap__button {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  background: var(--success-soft);
+  color: var(--success-ink);
+  font: inherit;
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+}
+.tool-tap__button:active { background: var(--primary); color: var(--primary-text); }
+.tool-table-wrap { overflow-x: auto; margin-top: 8px; }
+.tool-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; white-space: nowrap; }
+.tool-table th, .tool-table td { padding: 6px 10px; border-bottom: 1px solid var(--border); text-align: right; }
+.tool-table th[scope='row'], .tool-table thead th:first-child { text-align: left; }
+.tool-capo-list { margin: 4px 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 4px; }
+.tool-setlist { margin: 8px 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 6px; }
+.tool-setlist li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.tool-setlist input { width: 4.5em; }
+.tool-setlist input:first-child { width: auto; flex: 1; min-width: 8em; }
+.tool-choice { border: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.88rem; }
+.tool-choice legend { padding: 0; margin-bottom: 4px; color: var(--muted); }
+.tool-choice input { width: auto; }
+.tool-label { margin: 8px 0 4px; font-size: 0.88rem; color: var(--muted); }
+.tool-output {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 1rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+@media (max-width: 559px) {
+  .tool-setlist input:first-child { flex-basis: 100%; }
+}

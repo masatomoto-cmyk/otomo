@@ -2,6 +2,7 @@
 const STATIC = [
   '/', '/tracks', '/recruits', '/events', '/people',
   '/guide', '/guide/band-member', '/guide/first-live', '/guide/feedback', '/guide/session',
+  '/tools', '/tools/tap-tempo', '/tools/delay-time', '/tools/transpose', '/tools/capo', '/tools/setlist-time',
 ]
 // 地域・パート別の募集ページ（src/lib/constants.js の AREA_SLUGS・PART_SLUGS と同じ対応）
 const AREA_SLUGS = {

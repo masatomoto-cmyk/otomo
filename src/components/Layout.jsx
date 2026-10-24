@@ -79,6 +79,7 @@ export function Layout() {
         <Link to="/guide">音楽活動ガイド</Link>
         <Link to="/guide/band-member">メンバー募集の始め方</Link>
         <Link to="/guide/first-live">初ライブまでの流れ</Link>
+        <Link to="/tools">音楽の道具箱</Link>
         <Link to="/tracks">作品シェア</Link>
         <Link to="/events">ライブ・イベント告知</Link>
         <Link to="/people">ミュージシャンを探す</Link>
