@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ErrorText, Field } from '../components/Composer'
 import { TagPicker } from '../components/Tags'
 import { api } from '../lib/api'
@@ -22,6 +22,10 @@ export default function Settings() {
   const blocks = useAsync(() => api.listMyBlocks(), [])
   const [avatarBusy, setAvatarBusy] = useState(false)
   const [avatarError, setAvatarError] = useState('')
+  // 退会フォーム（フックは早期 return より前に置く）
+  const [confirmText, setConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     if (profile && !form) {
@@ -80,6 +84,19 @@ export default function Settings() {
       await refreshProfile()
     } finally {
       setAvatarBusy(false)
+    }
+  }
+
+  async function deleteAccount() {
+    if (!confirm('本当に退会しますか？ この操作は取り消せません。')) return
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await api.deleteAccount()
+      navigate('/', { replace: true })
+    } catch (err) {
+      setDeleteError(err.message)
+      setDeleting(false)
     }
   }
 
@@ -152,6 +169,23 @@ export default function Settings() {
           </li>
         ))}
       </ul>
+    </section>
+    <section className="card stack-sm danger-zone">
+      <h2>退会する</h2>
+      <p className="small">
+        退会すると、アカウント・プロフィール・アイコン画像・投稿・作品・募集・イベント・コメント・リアクション・参加表明・ブロック・通報・通知が
+        <strong>すべて削除され、元に戻せません</strong>。あなたの投稿に付いたほかの人のコメントも消えます。
+        詳しくは <Link to="/privacy">プライバシーポリシー</Link> をご覧ください。
+      </p>
+      <Field label="確認のため「退会する」と入力してください">
+        <input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder="退会する" autoComplete="off" />
+      </Field>
+      {deleteError && <p className="error">{deleteError}</p>}
+      <div className="row end">
+        <button type="button" className="btn danger" disabled={confirmText.trim() !== '退会する' || deleting} onClick={deleteAccount}>
+          {deleting ? '削除しています…' : 'アカウントを削除して退会する'}
+        </button>
+      </div>
     </section>
     </div>
   )

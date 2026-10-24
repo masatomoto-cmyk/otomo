@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ErrorText, Field } from '../components/Composer'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -13,6 +13,7 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '', displayName: '' })
   const [error, setError] = useState(null)
   const [notice, setNotice] = useState('')
+  const [agreed, setAgreed] = useState(false)
   const [busy, setBusy] = useState(false)
   const demo = api.mode === 'demo'
 
@@ -68,7 +69,15 @@ export default function Login() {
         </Field>
         {notice && <p className="notice">{notice}</p>}
         <ErrorText error={error} />
-        <button className="btn wide" disabled={busy}>{mode === 'signin' ? 'ログイン' : '登録する'}</button>
+        {mode === 'signup' && (
+          <label className="check">
+            <input type="checkbox" required checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />{' '}
+            <span>
+              <Link to="/terms" target="_blank">利用規約</Link>と<Link to="/privacy" target="_blank">プライバシーポリシー</Link>に同意します
+            </span>
+          </label>
+        )}
+        <button className="btn wide" disabled={busy || (mode === 'signup' && !agreed)}>{mode === 'signin' ? 'ログイン' : '登録する'}</button>
         <button type="button" className="link-btn" onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(null) }}>
           {mode === 'signin' ? 'アカウントを作る' : 'ログインはこちら'}
         </button>

@@ -152,6 +152,13 @@ export function createSupabaseApi(url, key) {
       return Object.fromEntries(rows.map((r) => [r.target_id, r.count]))
     },
 
+    // 退会。サーバー側（Edge Function delete-account）でアカウントと全データを消してからログアウトする
+    async deleteAccount() {
+      const { error } = await sb.functions.invoke('delete-account', { method: 'POST' })
+      if (error) throw new Error('退会の処理に失敗しました。時間をおいてもう一度お試しください')
+      await sb.auth.signOut()
+    },
+
     // 通知（コメント・応募・リアクション・参加表明。DB のトリガーで作られる）
     async listNotifications() {
       return unwrap(

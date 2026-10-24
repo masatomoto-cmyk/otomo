@@ -82,6 +82,8 @@ export function Layout() {
         <Link to="/tracks">作品シェア</Link>
         <Link to="/events">ライブ・イベント告知</Link>
         <Link to="/people">ミュージシャンを探す</Link>
+        <Link to="/terms">利用規約</Link>
+        <Link to="/privacy">プライバシーポリシー</Link>
       </footer>
       <nav className="nav-bottom">
         {NAV.map((n) => (

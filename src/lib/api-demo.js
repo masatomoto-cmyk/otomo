@@ -159,6 +159,19 @@ export function createDemoApi() {
       commit()
       return this.getProfile(id)
     },
+    async deleteAccount() {
+      const me = requireUser()
+      const mine = (r) => r.user_id === me
+      const ownedIds = new Set(['posts', 'tracks', 'recruitments', 'events'].flatMap((t) => db[t].filter(mine).map((r) => r.id)))
+      for (const t of ['posts', 'tracks', 'recruitments', 'events', 'event_attendees', 'reactions']) db[t] = db[t].filter((r) => !mine(r) && r.owner_id !== me)
+      db.comments = db.comments.filter((c) => !mine(c) && !ownedIds.has(c.target_id))
+      db.notifications = db.notifications.filter((n) => n.user_id !== me && n.actor_id !== me && !ownedIds.has(n.target_id))
+      db.blocks = db.blocks.filter((b) => b.blocker_id !== me && b.blocked_id !== me)
+      db.reports = db.reports.filter((r) => r.reporter_id !== me)
+      db.profiles = db.profiles.filter((p) => p.id !== me)
+      commit()
+      setUser(null)
+    },
     async listNotifications() {
       const me = requireUser()
       return delay(

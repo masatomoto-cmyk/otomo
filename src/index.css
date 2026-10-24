@@ -423,3 +423,7 @@ input[type='checkbox'] { width: auto; accent-color: var(--accent); }
 }
 .site-footer { max-width: 720px; margin: 0 auto; padding: 8px 16px 32px; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.82rem; }
 .site-footer a { color: var(--muted); }
+
+.danger-zone { border-color: var(--danger); }
+.danger-zone h2 { color: var(--danger); font-size: 1rem; }
+.legal h2 { font-size: 1rem; }
