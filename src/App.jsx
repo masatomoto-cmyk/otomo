@@ -13,7 +13,6 @@ import RecruitDetail from './pages/RecruitDetail'
 import Recruits from './pages/Recruits'
 import Settings from './pages/Settings'
 import Timeline from './pages/Timeline'
-import { ToolIndex, ToolPage } from './pages/Tools'
 import TrackDetail from './pages/TrackDetail'
 import Tracks from './pages/Tracks'
 
@@ -38,8 +37,6 @@ export default function App() {
         <Route path="guide" element={<GuideIndex />} />
         <Route path="guide/band-member" element={<GuideBandMember />} />
         <Route path="guide/:slug" element={<GuidePage />} />
-        <Route path="tools" element={<ToolIndex />} />
-        <Route path="tools/:slug" element={<ToolPage />} />
         <Route path="events" element={<Events />} />
         <Route path="events/area/:areaSlug" element={<Events />} />
         <Route path="events/:id" element={<EventDetail />} />
