@@ -10,7 +10,10 @@ export function AuthProvider({ children }) {
 
   const loadProfile = useCallback(async (u) => {
     setUser(u)
-    setProfile(u ? await api.getProfile(u.id) : null)
+    let p = u ? await api.getProfile(u.id) : null
+    // 姉妹サイトだけで登録した人が OTOMO にログインしたら、OTOMO のメンバーとして表示する
+    if (p?.otomo_visible === false) p = await api.updateProfile(u.id, { otomo_visible: true })
+    setProfile(p)
     setLoading(false)
   }, [])
 
