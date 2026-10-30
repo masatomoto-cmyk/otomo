@@ -20,13 +20,23 @@ Deno.serve(async (req) => {
   const user = data?.user
   if (error || !user) return json({ error: 'unauthorized' }, 401)
 
-  // 1. 自分の投稿に付いた他の人のコメント・通知
+  // 1. アイコン画像（Storage はデータベースの連鎖削除の対象外）。
+  //    最初に消し、失敗したらここで止める（アカウントとデータは残るので、もう一度退会を試せる）。
+  //    画像が残ったままアカウントだけ消えると、あとから消す手がかりがなくなるため。
+  const avatars = admin.storage.from('avatars')
+  for (let round = 0; ; round++) {
+    const { data: files, error: listError } = await avatars.list(user.id, { limit: 100 })
+    if (listError) return json({ error: 'avatar list failed' }, 500)
+    if (!files?.length) break
+    // 消しても一覧から減らないときに回り続けないよう、回数で打ち切る
+    if (round >= 10) return json({ error: 'avatar delete failed' }, 500)
+    const { error: removeError } = await avatars.remove(files.map((f) => `${user.id}/${f.name}`))
+    if (removeError) return json({ error: 'avatar delete failed' }, 500)
+  }
+
+  // 2. 自分の投稿に付いた他の人のコメント・通知
   const prep = await admin.rpc('prepare_account_deletion', { target_user: user.id })
   if (prep.error) return json({ error: 'prepare failed' }, 500)
-
-  // 2. アイコン画像（Storage はデータベースの連鎖削除の対象外）
-  const { data: files } = await admin.storage.from('avatars').list(user.id)
-  if (files?.length) await admin.storage.from('avatars').remove(files.map((f) => `${user.id}/${f.name}`))
 
   // 3. アカウント本体。profiles → 投稿・コメント・リアクション・参加表明・ブロック・通報・通知が連鎖して消える
   const del = await admin.auth.admin.deleteUser(user.id)
